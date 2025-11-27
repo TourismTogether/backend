@@ -1,22 +1,12 @@
 import { Express, Request, Response } from "express";
-import { testModel, ITest } from "../models/test.model";
+import userRouter from "./user.route";
+import authRouter from "./auth.route";
+import routeRouter from "./route.route";
 
 function route(app: Express) {
-
-    app.get("/", function (req: Request, res: Response) {
-        res.json({ message: "hello!!!" });
-    });
-
-    app.get("/test", async function (req: Request, res: Response) {
-        const data = await testModel.getAllData();
-        res.json({ data });
-    })
-
-    app.post("/test", async function (req: Request, res: Response) {
-        const data: ITest = req.body;
-        const result: ITest = await testModel.createOne(data.message);
-        res.json(result);
-    })
+    app.use("/users", userRouter);
+    app.use("/auth", authRouter);
+    app.use("/routes", routeRouter);
 }
 
 export default route;
