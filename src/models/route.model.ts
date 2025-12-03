@@ -1,7 +1,8 @@
 import { db } from "../configs/db";
 
 export interface IRoute {
-    id: string,
+    id?: string,
+    index: number,
     trip_id: string,
     title: string,
     description: string,
@@ -25,14 +26,15 @@ class RouteModel {
     async createOne(route: IRoute): Promise<IRoute | undefined> {
         const query = `
             INSERT INTO routes (
-                trip_id, title, description, start_location, end_location, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                trip_id, title, index, description, start_location, end_location, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *;
         `;
 
         const values = [
             route.trip_id,
             route.title,
+            route.index,
             route.description,
             route.start_location,
             route.end_location,

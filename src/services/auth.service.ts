@@ -1,11 +1,13 @@
-import { IUser, userModel } from "../models/user.model";
 import config from "../configs/config";
 import bcrypt from "bcrypt";
 import { APIResponse, STATUS } from "../types/response";
+import { accountModel, IAccount } from "../models/account.model";
+import { IUser, userModel } from "../models/user.model";
+import { error } from "console";
 
 const authService = {
-    async signUp(user: IUser) {
-        const isExistEmail = await userModel.findByEmail(user.email);
+    async signUp(account: IAccount, user: IUser): Promise<APIResponse<Object>> {
+        const isExistEmail = await accountModel.findByEmail(account.email);
         if (isExistEmail) {
             return {
                 status: STATUS.CONFLICT,
@@ -19,16 +21,92 @@ const authService = {
                 message: "Phone already exists"
             }
         }
+        if (!account.password) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "password is empty",
+                error: true
+            }
+        }
+        account.password = bcrypt.hashSync(account.password, config.saltRounds);
+        const newAccount = await accountModel.createOne(account);
 
+        if (!newAccount || !newAccount.id) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to sign up",
+                error: true
+            }
+        }
+
+        user.account_id = newAccount?.id;
         user.created_at = new Date(Date.now());
         user.updated_at = new Date(Date.now());
-        user.password = bcrypt.hashSync(user.password, config.saltRounds);
 
         const newUser = await userModel.createOne(user);
+        if (!newUser) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to sign up",
+                error: true
+            }
+        }
+
+        delete newAccount.password;
+
         return {
             status: STATUS.OK,
             message: "Successfully",
-            data: newUser
+            data: {
+                account: newAccount,
+                user: newUser
+            }
+        }
+    },
+
+    async signIn(account: IAccount): Promise<APIResponse<Object>> {
+        const emailAccount = await accountModel.findByEmail(account.email);
+        if (!emailAccount || !emailAccount.id || !emailAccount.password) {
+            return {
+                status: STATUS.NOT_FOUND,
+                message: "email is not found",
+                error: true
+            }
+        }
+
+        if (!account.password) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "password is empty",
+                error: true
+            }
+        }
+
+        if (!bcrypt.compareSync(account.password, emailAccount.password)) {
+            return {
+                status: STATUS.NOT_FOUND,
+                message: "password is wrong",
+                error: true
+            }
+        }
+
+        const user = await userModel.findByAccountId(emailAccount.id);
+        if (!user) {
+            return {
+                status: STATUS.NOT_FOUND,
+                message: "User is not found"
+            }
+        }
+
+        delete emailAccount.password;
+
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: {
+                account: emailAccount,
+                user
+            }
         }
     }
 }

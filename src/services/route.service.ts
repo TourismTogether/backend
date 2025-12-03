@@ -31,9 +31,9 @@ const routeService = {
         route.created_at = new Date(Date.now());
         route.updated_at = new Date(Date.now());
 
-        const newUser = await routeModel.createOne(route);
+        const newRoute = await routeModel.createOne(route);
 
-        if (!newUser) {
+        if (!newRoute) {
             return {
                 status: STATUS.INTERNAL_SERVER_ERROR,
                 message: "Failed to create route",
@@ -43,7 +43,7 @@ const routeService = {
         return {
             status: STATUS.OK,
             message: "Successfully",
-            data: newUser
+            data: newRoute
         }
     },
 

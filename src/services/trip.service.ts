@@ -1,25 +1,67 @@
 import { error } from "console";
-import { IUser, userModel } from "../models/user.model";
+import { ITrip, tripModel } from "../models/trip.model";
 import { APIResponse, STATUS } from "../types/response";
 
-const userSevice = {
-    async findAll(): Promise<APIResponse<Array<IUser>>> {
-        const users = await userModel.findAll();
-        if (!users) {
+const tripService = {
+    async findAll(): Promise<APIResponse<Array<ITrip>>> {
+        const trips = await tripModel.findAll();
+        if (!trips) {
             return {
                 status: STATUS.NOT_FOUND,
                 message: "",
                 error: true
+            }
+        }
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: trips
+        }
+    },
+
+    async findById(id: string | undefined): Promise<APIResponse<ITrip>> {
+        if (!id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "id is undefined",
+                error: true
+            }
+        }
+        const trip = await tripModel.findById(id);
+        if (!trip) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to find trip",
+                error: true
             };
         }
         return {
             status: STATUS.OK,
             message: "Successfully",
-            data: users
+            data: trip
         };
     },
 
-    async findById(id: string | undefined): Promise<APIResponse<IUser>> {
+    async createOne(trip: ITrip): Promise<APIResponse<ITrip>> {
+        trip.created_at = new Date(Date.now());
+        trip.updated_at = new Date(Date.now());
+
+        const newtrip = await tripModel.createOne(trip);
+        if (!newtrip) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to create trip",
+                error: true
+            };
+        }
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: newtrip
+        };
+    },
+
+    async updateById(id: string | undefined, trip: ITrip): Promise<APIResponse<ITrip>> {
         if (!id) {
             return {
                 status: STATUS.BAD_REQUEST,
@@ -27,43 +69,23 @@ const userSevice = {
                 error: true
             };
         }
-        const user = await userModel.findById(id);
-        if (!user) {
+        trip.updated_at = new Date(Date.now());
+        const updatedtrip = await tripModel.updateById(id, trip);
+        if (!updatedtrip) {
             return {
                 status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to find user",
+                message: "Failed to update trip",
                 error: true
             };
         }
         return {
             status: STATUS.OK,
             message: "Successfully",
-            data: user
+            data: updatedtrip
         };
     },
 
-
-    async createOne(user: IUser) {
-        user.created_at = new Date(Date.now());
-        user.updated_at = new Date(Date.now());
-
-        const newUser = await userModel.createOne(user);
-        if (!newUser) {
-            return {
-                status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to create user",
-                error: true
-            };
-        }
-        return {
-            status: STATUS.OK,
-            message: "Successfully",
-            data: newUser
-        };
-    },
-
-
-    async updateById(id: string | undefined, user: IUser): Promise<APIResponse<IUser>> {
+    async deleteById(id: string | undefined): Promise<APIResponse<ITrip>> {
         if (!id) {
             return {
                 status: STATUS.BAD_REQUEST,
@@ -71,35 +93,11 @@ const userSevice = {
                 error: true
             };
         }
-        user.updated_at = new Date(Date.now());
-        const updatedUser = await userModel.updateById(id, user);
-        if (!updatedUser) {
-            return {
-                status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to update user",
-                error: true
-            };
-        }
-        return {
-            status: STATUS.OK,
-            message: "Successfully",
-            data: updatedUser
-        };
-    },
-
-    async deleteById(id: string | undefined) {
-        if (!id) {
-            return {
-                status: STATUS.BAD_REQUEST,
-                message: "id is undefined",
-                error: true
-            };
-        }
-        const result = userModel.deleteById(id);
+        const result = tripModel.deleteById(id);
         if (!result) {
             return {
                 status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to delete user",
+                message: "Failed to delete trip",
                 error: true
             };
         }
@@ -108,6 +106,6 @@ const userSevice = {
             message: "Successfully"
         }
     }
-}
+};
 
-export default userSevice;
+export default tripService;

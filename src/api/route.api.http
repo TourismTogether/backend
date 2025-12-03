@@ -1,0 +1,23 @@
+GET http://localhost:8080/routes
+
+
+POST http://localhost:8080/routes
+Content-Type: application/json
+
+{
+    "trip_id": "a45bc146-3701-4979-a870-47e6c67653e3",
+    "title": "Hành trình Sài Gòn - Đà Lạt",
+    "description": "Chuyến đi 3 ngày 2 đêm từ Sài Gòn đến Đà Lạt bằng xe máy.",
+    "start_location": "Sài Gòn, Việt Nam",
+    "end_location": "Đà Lạt, Việt Nam",
+    "index": "1"
+}
+
+PATCH  http://localhost:8080/routes/2cb3ee4f-221c-4989-b79b-029931a23e54
+Content-Type: application/json
+
+{
+    "title": "SUA ROUTE"
+}
+
+DELETE   http://localhost:8080/routes/2cb3ee4f-221c-4989-b79b-029931a23e54
