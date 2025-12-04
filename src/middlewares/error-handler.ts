@@ -7,6 +7,15 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
     res.status(500).json({
         status: 500,
         message: "Internal server error",
+        data: err,
+        error: true
+    })
+}
+
+export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
+    res.status(404).json({
+        status: 404,
+        message: "Not found",
         error: true
     })
 }

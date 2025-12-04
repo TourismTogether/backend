@@ -2,7 +2,7 @@ import express, { Express, Request, Response } from "express";
 import config from "./configs/config";
 import route from "./routes/index";
 import { initDB } from "./configs/db";
-import { errorHandler } from "./middlewares/error-handler";
+import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
 
 
 const app: Express = express();
@@ -16,6 +16,7 @@ initDB();
 route(app);
 
 app.use(errorHandler);
+app.use(notFoundHandler);
 
 app.listen(port, () => {
     console.log(`App listening on port ${port}`);
