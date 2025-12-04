@@ -7,6 +7,7 @@ import tripRouter from "./trip.route"
 import costRouter from "./cost.route"
 import regionRouter from "./region.route"
 import destinationRouter from "./destination.route"
+import postRouter from "./post.route"
 
 function route(app: Express) {
     app.use("/users", userRouter);
@@ -17,6 +18,7 @@ function route(app: Express) {
     app.use("/costs", costRouter);
     app.use("/regions", regionRouter);
     app.use("/destinations", destinationRouter);
+    app.use("/posts", postRouter);
 }
 
 export default route;
