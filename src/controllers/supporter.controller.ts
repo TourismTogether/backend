@@ -38,8 +38,8 @@ class SupporterController {
     async updateSupporterById(req: Request, res: Response, next: NextFunction) {
         try {
             const { user_id } = req.params;
-            const traveller = req.body
-            const result = await supporterService.updateById(user_id, traveller);
+            const supporter = req.body
+            const result = await supporterService.updateById(user_id, supporter);
             return res.status(result.status).json(result);
         } catch (err) {
             next(err);

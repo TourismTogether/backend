@@ -23,11 +23,55 @@ class TripController {
         }
     }
 
+    // GET - /trips/:id/users
+    async getTripMembers(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await tripService.findTripMembers(id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // GET - /trips/:id/destinations
+    async getListDestination(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await tripService.findListDestination(id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     // POST - /trips
     async createTrip(req: Request, res: Response, next: NextFunction) {
         try {
             const trip = req.body;
             const result = await tripService.createOne(trip);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // POST - /trips/:trip_id/users/:user_id
+    async addTripMember(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { trip_id, user_id } = req.params;
+            const result = await tripService.addTripMember(trip_id, user_id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // POST - /trips/:trip_id/destinations/:destination_id
+    async addDestination(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { trip_id, destination_id } = req.params;
+            const result = await tripService.addDestination(trip_id, destination_id);
             res.status(result.status).json(result);
         } catch (err) {
             next(err);
@@ -51,6 +95,28 @@ class TripController {
         try {
             const { id } = req.params;
             const result = await tripService.deleteById(id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // DELETE - /trips/:trip_id/users/:user_id
+    async deleteTripMember(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { trip_id, user_id } = req.params;
+            const result = await tripService.deleteTripMember(trip_id, user_id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // DELETE - /trips/:trip_id/destinations/:destination_id
+    async deleteDestination(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { trip_id, destination_id } = req.params;
+            const result = await tripService.deleteDestination(trip_id, destination_id);
             res.status(result.status).json(result);
         } catch (err) {
             next(err);

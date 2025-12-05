@@ -15,7 +15,7 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
 export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
     res.status(404).json({
         status: 404,
-        message: "Not found",
+        message: "Not found route",
         error: true
     })
 }

@@ -1,4 +1,6 @@
 import { db } from "../configs/db";
+import { IDestination } from "./destination.model";
+import { IUser } from "./user.model";
 
 export interface ITrip {
     id?: string,
@@ -25,6 +27,30 @@ class TripModel {
     async findById(id: string): Promise<ITrip | undefined> {
         const data = await db.query<ITrip>("SELECT * FROM trips WHERE id = $1", [id]);
         return data.rows[0];
+    }
+
+    async findTripMembers(id: string): Promise<Array<IUser>> {
+        const query = `
+            SELECT u.*
+            FROM join_trip AS jt
+            JOIN users AS u ON u.id = jt.user_id
+            WHERE jt.trip_id = $1
+        `;
+        const values = [id];
+        const data = await db.query<IUser>(query, values);
+        return data.rows
+    }
+
+    async findListDestination(id: string): Promise<Array<IDestination>> {
+        const query = `
+            SELECT d.*
+            FROM trip_destination AS td
+            JOIN destinations AS d ON d.id = td.destination_id
+            WHERE td.trip_id = $1
+        `;
+        const values = [id];
+        const data = await db.query<IDestination>(query, values);
+        return data.rows;
     }
 
     async createOne(trip: ITrip): Promise<ITrip | undefined> {

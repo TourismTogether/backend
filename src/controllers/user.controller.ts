@@ -24,6 +24,17 @@ class UserController {
         }
     }
 
+    // GET - /users/:id/trips
+    async getListTrip(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await userSevice.findListTrip(id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     // POST - /users
     async createUser(req: Request, res: Response, next: NextFunction) {
         try {

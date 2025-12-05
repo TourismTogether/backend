@@ -1,6 +1,7 @@
 import { error } from "console";
 import { IUser, userModel } from "../models/user.model";
 import { APIResponse, STATUS } from "../types/response";
+import { ITrip } from "../models/trip.model";
 
 const userSevice = {
     async findAll(): Promise<APIResponse<Array<IUser>>> {
@@ -106,6 +107,28 @@ const userSevice = {
         return {
             status: STATUS.OK,
             message: "Successfully"
+        }
+    },
+
+    async findListTrip(id: string | undefined): Promise<APIResponse<Array<ITrip>>> {
+        if (!id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "id is undefined",
+                error: true
+            };
+        }
+        const listTrip = await userModel.findListTrip(id);
+        if (!listTrip) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to find"
+            }
+        }
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: listTrip
         }
     }
 }

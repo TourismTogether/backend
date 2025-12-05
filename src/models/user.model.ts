@@ -1,4 +1,5 @@
 import { db } from "../configs/db";
+import { ITrip } from "./trip.model";
 
 export interface IUser {
     id?: string,
@@ -40,7 +41,7 @@ class UserModel {
         return data.rows[0];
     }
 
-    async updateById(id: string, user: IUser) {
+    async updateById(id: string, user: IUser): Promise<IUser | undefined> {
         const { id: _id, ...fieldsToUpdate } = user;
         const keys = Object.keys(fieldsToUpdate);
         if (keys.length === 0) return undefined;
@@ -59,11 +60,23 @@ class UserModel {
         return data.rows[0];
     }
 
-    async deleteById(id: string) {
+    async deleteById(id: string): Promise<boolean> {
         const result = await db.query(`
             DELETE FROM users WHERE id = $1
             `, [id]);
         return result.rowCount == null || result.rowCount > 0;
+    }
+
+    async findListTrip(id: string): Promise<Array<ITrip>> {
+        const query = `
+            SELECT t.*
+            FROM join_trip AS jt
+            JOIN trips AS t ON t.id = jt.trip_id
+            WHERE jt.user_id = $1
+        `;
+        const values = [id];
+        const data = await db.query<ITrip>(query, values);
+        return data.rows;
     }
 }
 
