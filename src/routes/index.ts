@@ -9,6 +9,7 @@ import regionRouter from "./region.route"
 import destinationRouter from "./destination.route"
 import postRouter from "./post.route"
 import diaryRouter from "./diary.route"
+import travellerRouter from "./traveller.route"
 
 function route(app: Express) {
     app.use("/users", userRouter);
@@ -21,6 +22,7 @@ function route(app: Express) {
     app.use("/destinations", destinationRouter);
     app.use("/posts", postRouter);
     app.use("/diaries", diaryRouter);
+    app.use("/travellers", travellerRouter);
 }
 
 export default route;

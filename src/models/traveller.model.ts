@@ -1,0 +1,80 @@
+import { db } from "../configs/db";
+
+export interface ITraveller {
+    user_id?: string,
+    bio: string,
+    is_shared_location: string,
+    latitude: number,
+    longitude: number,
+    travel_preference: Array<string>,
+    emergency_contacts: Array<string>,
+    is_safe: boolean
+}
+
+class TravellerModel {
+    async findAll(): Promise<Array<ITraveller>> {
+        const result = await db.query(`SELECT * FROM travellers`);
+        return result.rows;
+    }
+
+    async findById(userId: string): Promise<ITraveller | undefined> {
+        const result = await db.query(
+            `SELECT * FROM travellers WHERE user_id = $1`,
+            [userId]
+        );
+        return result.rows[0];
+    }
+
+    async createOne(traveller: ITraveller): Promise<ITraveller | undefined> {
+        const query = `
+      INSERT INTO travellers 
+      (user_id, bio, is_shared_location, latitude, longitude, travel_preference, emergency_contacts, is_safe)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      RETURNING *;
+    `;
+
+        const values = [
+            traveller.user_id,
+            traveller.bio,
+            traveller.is_shared_location,
+            traveller.latitude,
+            traveller.longitude,
+            traveller.travel_preference,
+            traveller.emergency_contacts,
+            traveller.is_safe,
+        ];
+
+        const result = await db.query(query, values);
+        return result.rows[0];
+    }
+
+    async updateById(user_id: string, traveller: Partial<ITraveller>): Promise<ITraveller | undefined> {
+        const { user_id: _userId, ...fieldsToUpdate } = traveller;
+        const keys = Object.keys(fieldsToUpdate);
+        if (keys.length === 0) return undefined;
+
+        const setClause = keys.map((key, idx) => `${key} = $${idx + 2}`).join(", ");
+        const values = Object.values(fieldsToUpdate);
+        values.unshift(user_id);
+
+        const query = `
+            UPDATE travellers
+            SET ${setClause}
+            WHERE user_id = $1
+            RETURNING *;
+        `;
+
+        const result = await db.query(query, values);
+        return result.rows[0];
+    }
+
+    async deleteById(userId: string): Promise<boolean> {
+        const result = await db.query(
+            `DELETE FROM travellers WHERE user_id = $1`,
+            [userId]
+        );
+        return result.rowCount !== null && result.rowCount > 0;
+    }
+}
+
+export const travellerModel = new TravellerModel();
