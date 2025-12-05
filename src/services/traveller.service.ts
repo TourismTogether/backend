@@ -1,4 +1,5 @@
 import { travellerModel, ITraveller } from "../models/traveller.model";
+import { userModel } from "../models/user.model";
 import { APIResponse, STATUS } from "../types/response";
 
 const travellerService = {
@@ -49,6 +50,15 @@ const travellerService = {
                 message: "user_id is required",
                 error: true,
             };
+        }
+
+        const user = await userModel.findById(traveller.user_id);
+        if (!user) {
+            return {
+                status: STATUS.NOT_FOUND,
+                message: "Not found user_id",
+                error: true
+            }
         }
 
         const newTraveller = await travellerModel.createOne(traveller);

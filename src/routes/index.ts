@@ -3,13 +3,14 @@ import userRouter from "./user.route";
 import authRouter from "./auth.route";
 import routeRouter from "./route.route";
 import accountRouter from "./account.route";
-import tripRouter from "./trip.route"
-import costRouter from "./cost.route"
-import regionRouter from "./region.route"
-import destinationRouter from "./destination.route"
-import postRouter from "./post.route"
-import diaryRouter from "./diary.route"
-import travellerRouter from "./traveller.route"
+import tripRouter from "./trip.route";
+import costRouter from "./cost.route";
+import regionRouter from "./region.route";
+import destinationRouter from "./destination.route";
+import postRouter from "./post.route";
+import diaryRouter from "./diary.route";
+import travellerRouter from "./traveller.route";
+import supporterRouter from "./supporter.route";
 
 function route(app: Express) {
     app.use("/users", userRouter);
@@ -23,6 +24,7 @@ function route(app: Express) {
     app.use("/posts", postRouter);
     app.use("/diaries", diaryRouter);
     app.use("/travellers", travellerRouter);
+    app.use("/supporters", supporterRouter);
 }
 
 export default route;

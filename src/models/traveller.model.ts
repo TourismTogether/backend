@@ -49,12 +49,14 @@ class TravellerModel {
     }
 
     async updateById(user_id: string, traveller: Partial<ITraveller>): Promise<ITraveller | undefined> {
-        const { user_id: _userId, ...fieldsToUpdate } = traveller;
-        const keys = Object.keys(fieldsToUpdate);
+        const keys = Object.keys(traveller);
         if (keys.length === 0) return undefined;
 
-        const setClause = keys.map((key, idx) => `${key} = $${idx + 2}`).join(", ");
-        const values = Object.values(fieldsToUpdate);
+        const setClause = keys
+            .map((key, idx) => `${key} = $${idx + 2}`)
+            .join(", ");
+
+        const values = Object.values(traveller);
         values.unshift(user_id);
 
         const query = `
