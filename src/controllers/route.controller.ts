@@ -14,6 +14,28 @@ class RouteController {
         }
     }
 
+    // GET - /routes/:id
+    async getRouteById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await routeService.findById(id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // GET - /routes/:id/costs
+    async getListCost(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await routeService.findListCost(id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     // POST - /routes
     async createRoute(req: Request, res: Response, next: NextFunction) {
         try {

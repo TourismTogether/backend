@@ -1,3 +1,5 @@
+import { IRouteResponse } from "../dto/routeResponse";
+import { ICost } from "../models/cost.model";
 import { IRoute, routeModel } from "../models/route.model";
 import { APIResponse, STATUS } from "../types/response";
 
@@ -15,6 +17,30 @@ const routeService = {
             status: STATUS.OK,
             message: "Successfully",
             data: routes
+        }
+    },
+
+    async findById(id: string | undefined): Promise<APIResponse<IRoute>> {
+        if (!id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "id is undefined",
+                error: true
+            }
+        }
+        const route = await routeModel.findById(id);
+        if (!route) {
+            return {
+                status: STATUS.NOT_FOUND,
+                message: "id is not found",
+                error: true
+            };
+        }
+
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: route
         }
     },
 
@@ -95,6 +121,22 @@ const routeService = {
             status: STATUS.OK,
             message: "Successfully"
         };
+    },
+
+    async findListCost(id: string | undefined): Promise<APIResponse<Array<ICost>>> {
+        if (!id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "Id is undefined",
+                error: true
+            }
+        }
+        const listCost = await routeModel.findListCost(id);
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: listCost
+        }
     }
 }
 

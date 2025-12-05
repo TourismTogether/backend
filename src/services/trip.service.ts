@@ -4,21 +4,37 @@ import { IUser, userModel } from "../models/user.model";
 import { IJoinTrip, joinTripModel } from "../models/join-trip.model";
 import { destinationModel, IDestination } from "../models/destination.model";
 import { ITripResponse } from "../dto/tripResponse";
+import { error } from "console";
 
 const tripService = {
-    async findAll(): Promise<APIResponse<Array<ITrip>>> {
+    async findAll(): Promise<APIResponse<Array<ITripResponse>>> {
         const trips = await tripModel.findAll();
-        if (!trips) {
+        if (!trips || trips.length === 0) {
             return {
                 status: STATUS.NOT_FOUND,
-                message: "",
+                message: "No trips found",
                 error: true
             }
         }
+
+        const responses = await Promise.all(
+            trips.map(async (trip) => {
+                const { destination_id, ...dataTrip } = trip;
+
+                const destination = await destinationModel.findById(destination_id);
+                if (!destination) return null;
+
+                return {
+                    ...dataTrip,
+                    destination
+                } as ITripResponse;
+            })
+        );
+
         return {
             status: STATUS.OK,
             message: "Successfully",
-            data: trips
+            data: responses.filter(t => t !== null)
         }
     },
 
@@ -247,6 +263,28 @@ const tripService = {
             message: "Successfully"
         }
     },
+
+    async findListRoutes(id: string | undefined) {
+        if (!id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "id is require",
+                error: true
+            }
+        }
+        const listRoutes = await tripModel.findListRoutes(id);
+        if (!listRoutes) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "failed to find"
+            }
+        }
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: listRoutes
+        }
+    }
 };
 
 export default tripService;

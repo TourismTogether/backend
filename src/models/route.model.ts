@@ -1,4 +1,5 @@
 import { db } from "../configs/db";
+import { ICost } from "./cost.model";
 
 export interface IRoute {
     id?: string,
@@ -71,6 +72,18 @@ class RouteModel {
             DELETE FROM routes WHERE id = $1
             `, [id]);
         return result.rowCount == null || result.rowCount > 0;
+    }
+
+    async findListCost(id: string): Promise<Array<ICost>> {
+        const query = `
+            SELECT c.*
+            FROM routes AS r
+            JOIN costs AS c ON c.route_id = r.id
+            WHERE r.id = $1
+        `;
+        const values = [id];
+        const data = await db.query(query, values);
+        return data.rows;
     }
 }
 

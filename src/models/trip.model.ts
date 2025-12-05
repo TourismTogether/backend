@@ -111,7 +111,7 @@ class TripModel {
         return result.rowCount == null || result.rowCount > 0;
     }
 
-    async findListRoute(id: string): Promise<Array<IRoute>> {
+    async findListRoutes(id: string): Promise<Array<IRoute>> {
         const query = `
             SELECT r.*
             FROM routes AS r
