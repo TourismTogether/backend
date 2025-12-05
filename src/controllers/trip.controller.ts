@@ -34,17 +34,6 @@ class TripController {
         }
     }
 
-    // GET - /trips/:id/destinations
-    async getListDestination(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { id } = req.params;
-            const result = await tripService.findListDestination(id);
-            res.status(result.status).json(result);
-        } catch (err) {
-            next(err);
-        }
-    }
-
     // POST - /trips
     async createTrip(req: Request, res: Response, next: NextFunction) {
         try {
@@ -61,17 +50,6 @@ class TripController {
         try {
             const { trip_id, user_id } = req.params;
             const result = await tripService.addTripMember(trip_id, user_id);
-            res.status(result.status).json(result);
-        } catch (err) {
-            next(err);
-        }
-    }
-
-    // POST - /trips/:trip_id/destinations/:destination_id
-    async addDestination(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { trip_id, destination_id } = req.params;
-            const result = await tripService.addDestination(trip_id, destination_id);
             res.status(result.status).json(result);
         } catch (err) {
             next(err);
@@ -106,17 +84,6 @@ class TripController {
         try {
             const { trip_id, user_id } = req.params;
             const result = await tripService.deleteTripMember(trip_id, user_id);
-            res.status(result.status).json(result);
-        } catch (err) {
-            next(err);
-        }
-    }
-
-    // DELETE - /trips/:trip_id/destinations/:destination_id
-    async deleteDestination(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { trip_id, destination_id } = req.params;
-            const result = await tripService.deleteDestination(trip_id, destination_id);
             res.status(result.status).json(result);
         } catch (err) {
             next(err);

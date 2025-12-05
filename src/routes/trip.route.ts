@@ -6,13 +6,10 @@ const router: Router = express.Router();
 router.get("/", tripController.getAllTrips);
 router.get("/:id", tripController.getTripById);
 router.get("/:id/users", tripController.getTripMembers);
-router.get("/:id/destinations", tripController.getListDestination);
 router.post("/", tripController.createTrip);
 router.post("/:trip_id/users/:user_id", tripController.addTripMember);
-router.post("/:trip_id/destinations/:destination_id", tripController.addDestination);
 router.patch("/:id", tripController.updateTripById);
 router.delete("/:id", tripController.deleteTripById);
 router.delete("/:trip_id/users/:user_id", tripController.deleteTripMember);
-router.delete("/:trip_id/destinations/:destination_id", tripController.deleteDestination);
 
 export default router;

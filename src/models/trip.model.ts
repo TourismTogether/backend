@@ -1,9 +1,11 @@
+import { IRoute } from "express";
 import { db } from "../configs/db";
 import { IDestination } from "./destination.model";
 import { IUser } from "./user.model";
 
 export interface ITrip {
     id?: string,
+    destination_id: string,
     title: string,
     description: string,
     departure: string,
@@ -41,28 +43,29 @@ class TripModel {
         return data.rows
     }
 
-    async findListDestination(id: string): Promise<Array<IDestination>> {
-        const query = `
-            SELECT d.*
-            FROM trip_destination AS td
-            JOIN destinations AS d ON d.id = td.destination_id
-            WHERE td.trip_id = $1
-        `;
-        const values = [id];
-        const data = await db.query<IDestination>(query, values);
-        return data.rows;
-    }
+    // async findListDestination(id: string): Promise<Array<IDestination>> {
+    //     const query = `
+    //         SELECT d.*
+    //         FROM trip_destination AS td
+    //         JOIN destinations AS d ON d.id = td.destination_id
+    //         WHERE td.trip_id = $1
+    //     `;
+    //     const values = [id];
+    //     const data = await db.query<IDestination>(query, values);
+    //     return data.rows;
+    // }
 
     async createOne(trip: ITrip): Promise<ITrip | undefined> {
         const query = `
                     INSERT INTO trips (
-                        title, description, departure, distance, start_date, end_date, difficult,
+                        destination_id, title, description, departure, distance, start_date, end_date, difficult,
                         total_budget, spent_amount, status, created_at, updated_at)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                     RETURNING *;
                 `;
 
         const values = [
+            trip.destination_id,
             trip.title,
             trip.description,
             trip.departure,
@@ -106,6 +109,18 @@ class TripModel {
             DELETE FROM trips WHERE id = $1
             `, [id]);
         return result.rowCount == null || result.rowCount > 0;
+    }
+
+    async findListRoute(id: string): Promise<Array<IRoute>> {
+        const query = `
+            SELECT r.*
+            FROM routes AS r
+            JOIN trips AS t ON r.trip_id = t.id
+            WHERE r.trip_id = $1
+        `;
+        const values = [id];
+        const data = await db.query(query, values);
+        return data.rows;
     }
 }
 

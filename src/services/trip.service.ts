@@ -1,10 +1,9 @@
-import { error } from "console";
 import { ITrip, tripModel } from "../models/trip.model";
 import { APIResponse, STATUS } from "../types/response";
 import { IUser, userModel } from "../models/user.model";
 import { IJoinTrip, joinTripModel } from "../models/join-trip.model";
 import { destinationModel, IDestination } from "../models/destination.model";
-import { ITripDestination, tripDestinationModel } from "../models/trip-destination";
+import { ITripResponse } from "../dto/tripResponse";
 
 const tripService = {
     async findAll(): Promise<APIResponse<Array<ITrip>>> {
@@ -23,7 +22,7 @@ const tripService = {
         }
     },
 
-    async findById(id: string | undefined): Promise<APIResponse<ITrip>> {
+    async findById(id: string | undefined): Promise<APIResponse<ITripResponse>> {
         if (!id) {
             return {
                 status: STATUS.BAD_REQUEST,
@@ -39,14 +38,43 @@ const tripService = {
                 error: true
             };
         }
+        const { destination_id, ...dataTrip } = trip
+        const destination = await destinationModel.findById(destination_id);
+        if (!destination) {
+            return {
+                status: STATUS.NOT_FOUND,
+                message: "destination_id is not found",
+                error: true
+            };
+        }
+        const result = {
+            ...dataTrip,
+            destination
+        };
         return {
             status: STATUS.OK,
             message: "Successfully",
-            data: trip
+            data: result
         };
     },
 
     async createOne(trip: ITrip): Promise<APIResponse<ITrip>> {
+        if (!trip.destination_id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "destination_id is requied",
+                error: true
+            }
+        }
+        const description = await destinationModel.findById(trip.destination_id);
+        if (!description) {
+            return {
+                status: STATUS.NOT_FOUND,
+                message: "destination_id is not found",
+                error: true
+            }
+        }
+
         trip.created_at = new Date(Date.now());
         trip.updated_at = new Date(Date.now());
 
@@ -219,128 +247,6 @@ const tripService = {
             message: "Successfully"
         }
     },
-
-    async findListDestination(id: string | undefined): Promise<APIResponse<Array<IDestination>>> {
-        if (!id) {
-            return {
-                status: STATUS.BAD_REQUEST,
-                message: "id is undefined",
-                error: true
-            }
-        }
-        const trip = await tripModel.findById(id);
-        if (!trip) {
-            return {
-                status: STATUS.NOT_FOUND,
-                message: "id is not found",
-                error: true
-            };
-        }
-        const listDestination = await tripModel.findListDestination(id);
-        if (!listDestination) {
-            return {
-                status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to find"
-            }
-        }
-        return {
-            status: STATUS.OK,
-            message: "Successfully",
-            data: listDestination
-        }
-    },
-
-    async addDestination(trip_id: string | undefined, destination_id: string | undefined): Promise<APIResponse<ITripDestination>> {
-        if (!trip_id || !destination_id) {
-            return {
-                status: STATUS.BAD_REQUEST,
-                message: "trip_id and destination_id is require",
-                error: true
-            }
-        }
-        const trip = await tripModel.findById(trip_id);
-        if (!trip) {
-            return {
-                status: STATUS.NOT_FOUND,
-                message: "trip_id is not found",
-                error: true
-            };
-        }
-        const destination = await destinationModel.findById(destination_id);
-        if (!destination) {
-            return {
-                status: STATUS.NOT_FOUND,
-                message: "destination_id is not found",
-                error: true
-            };
-        }
-        const destinationTrip = await tripDestinationModel.find(trip_id, destination_id);
-        console.log(trip_id, destination_id);
-        console.log(destinationTrip);
-        if (destinationTrip) {
-            return {
-                status: STATUS.CONFLICT,
-                message: "trip destination already exist"
-            }
-        }
-        const newDstinationTrip = await tripDestinationModel.add(trip_id, destination_id);
-        if (!newDstinationTrip) {
-            return {
-                status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to add",
-                error: true
-            }
-        }
-        return {
-            status: STATUS.OK,
-            message: "Successfully",
-            data: newDstinationTrip
-        }
-    },
-
-    async deleteDestination(trip_id: string | undefined, destination_id: string | undefined) {
-        if (!trip_id || !destination_id) {
-            return {
-                status: STATUS.BAD_REQUEST,
-                message: "trip_id and destination_id is require",
-                error: true
-            }
-        }
-        const trip = await tripModel.findById(trip_id);
-        if (!trip) {
-            return {
-                status: STATUS.NOT_FOUND,
-                message: "trip_id is not found",
-                error: true
-            };
-        }
-        const destination = await destinationModel.findById(destination_id);
-        if (!destination) {
-            return {
-                status: STATUS.NOT_FOUND,
-                message: "destination_id is not found",
-                error: true
-            };
-        }
-        const destinationTrip = await tripDestinationModel.find(trip_id, destination_id);
-        if (!destinationTrip) {
-            return {
-                status: STATUS.CONFLICT,
-                message: "trip destination not found"
-            }
-        }
-        const result = await tripDestinationModel.delete(trip_id, destination_id);
-        if (!result) {
-            return {
-                status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "Failed to delete"
-            }
-        }
-        return {
-            status: STATUS.OK,
-            message: "Successfully",
-        }
-    }
 };
 
 export default tripService;
