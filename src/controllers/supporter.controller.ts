@@ -26,8 +26,8 @@ class SupporterController {
     // POST - /supporters
     async createSupporter(req: Request, res: Response, next: NextFunction) {
         try {
-            const traveller = req.body;
-            const result = await supporterService.createOne(traveller);
+            const supporter = req.body;
+            const result = await supporterService.createOne(supporter);
             return res.status(result.status).json(result);
         } catch (err) {
             next(err);
