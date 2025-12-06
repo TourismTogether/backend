@@ -5,6 +5,8 @@ import { IJoinTrip, joinTripModel } from "../models/join-trip.model";
 import { destinationModel, IDestination } from "../models/destination.model";
 import { ITripResponse } from "../dto/tripResponse";
 import { error } from "console";
+import { IDiary } from "../models/diary.model";
+import { IRoute } from "express";
 
 const tripService = {
     async findAll(): Promise<APIResponse<Array<ITripResponse>>> {
@@ -264,7 +266,7 @@ const tripService = {
         }
     },
 
-    async findListRoutes(id: string | undefined) {
+    async findListRoutes(id: string | undefined): Promise<APIResponse<Array<IRoute>>> {
         if (!id) {
             return {
                 status: STATUS.BAD_REQUEST,
@@ -283,6 +285,28 @@ const tripService = {
             status: STATUS.OK,
             message: "Successfully",
             data: listRoutes
+        }
+    },
+
+    async findListDiaries(id: string | undefined): Promise<APIResponse<Array<IDiary>>> {
+        if (!id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "id is require",
+                error: true
+            }
+        }
+        const listDiaries = await tripModel.findListDiaries(id);
+        if (!listDiaries) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "failed to find"
+            }
+        }
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: listDiaries
         }
     }
 };

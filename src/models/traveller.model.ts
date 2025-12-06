@@ -1,4 +1,6 @@
 import { db } from "../configs/db";
+import { IDiary } from "./diary.model";
+import { IPost } from "./post.model";
 
 export interface ITraveller {
     user_id?: string,
@@ -76,6 +78,30 @@ class TravellerModel {
             [userId]
         );
         return result.rowCount !== null && result.rowCount > 0;
+    }
+
+    async getListDiaries(user_id: string): Promise<Array<IDiary>> {
+        const query = `
+            SELECT
+            FROM travellers AS t
+            JOIN diaries AS d ON d.user_id = t.user_id
+            WHERE t.user_id = $1
+        `;
+        const values = [user_id];
+        const data = await db.query<IDiary>(query, values);
+        return data.rows
+    }
+
+    async getListPosts(user_id: string): Promise<Array<IPost>> {
+        const query = `
+            SELECT p.*
+            FROM travellers AS t
+            JOIN posts AS p ON p.user_id = t.user_id
+            WHERE t.user_id = $1
+        `;
+        const values = [user_id];
+        const data = await db.query<IPost>(query, values);
+        return data.rows;
     }
 }
 

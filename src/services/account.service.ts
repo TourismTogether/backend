@@ -1,6 +1,7 @@
-import { error } from "console";
+import bcrypt from "bcrypt";
 import { IAccount, accountModel } from "../models/account.model";
 import { APIResponse, STATUS } from "../types/response";
+import config from "../configs/config";
 
 const accountService = {
     async findAll(): Promise<APIResponse<Array<IAccount>>> {
@@ -36,6 +37,14 @@ const accountService = {
     },
 
     async createOne(account: IAccount): Promise<APIResponse<IAccount>> {
+        if (!account.password) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "password is require",
+                error: true
+            }
+        }
+        account.password = bcrypt.hashSync(account.password, config.saltRounds);
         const newAccount = await accountModel.createOne(account);
         if (!newAccount) {
             return {
@@ -58,7 +67,9 @@ const accountService = {
                 message: "id is undefined"
             }
         }
-
+        if (account.password) {
+            account.password = bcrypt.hashSync(account.password, config.saltRounds);
+        }
         const updatedAccount = await accountModel.updatedById(id, account);
         if (!updatedAccount) {
             return {

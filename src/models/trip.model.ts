@@ -2,6 +2,7 @@ import { IRoute } from "express";
 import { db } from "../configs/db";
 import { IDestination } from "./destination.model";
 import { IUser } from "./user.model";
+import { IDiary } from "./diary.model";
 
 export interface ITrip {
     id?: string,
@@ -42,18 +43,6 @@ class TripModel {
         const data = await db.query<IUser>(query, values);
         return data.rows
     }
-
-    // async findListDestination(id: string): Promise<Array<IDestination>> {
-    //     const query = `
-    //         SELECT d.*
-    //         FROM trip_destination AS td
-    //         JOIN destinations AS d ON d.id = td.destination_id
-    //         WHERE td.trip_id = $1
-    //     `;
-    //     const values = [id];
-    //     const data = await db.query<IDestination>(query, values);
-    //     return data.rows;
-    // }
 
     async createOne(trip: ITrip): Promise<ITrip | undefined> {
         const query = `
@@ -120,6 +109,18 @@ class TripModel {
         `;
         const values = [id];
         const data = await db.query(query, values);
+        return data.rows;
+    }
+
+    async findListDiaries(id: string): Promise<Array<IDiary>> {
+        const query = `
+            SELECT d.*
+            FROM diaries AS d
+            JOIN trips AS t ON d.trip_id = t.id
+            WHERE t.id = $1
+        `;
+        const values = [id];
+        const data = await db.query<IDiary>(query, values);
         return data.rows;
     }
 }

@@ -45,6 +45,17 @@ class TripController {
         }
     }
 
+    // GET - /trips/:id/diaries
+    async getListDiaries(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await tripService.findListDiaries(id);
+            res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     // POST - /trips
     async createTrip(req: Request, res: Response, next: NextFunction) {
         try {

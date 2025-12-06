@@ -1,3 +1,5 @@
+import { IDiary } from "../models/diary.model";
+import { IPost } from "../models/post.model";
 import { travellerModel, ITraveller } from "../models/traveller.model";
 import { userModel } from "../models/user.model";
 import { APIResponse, STATUS } from "../types/response";
@@ -133,6 +135,37 @@ const travellerService = {
             message: "Successfully",
         };
     },
+
+    async getListDiaries(user_id: string | undefined): Promise<APIResponse<Array<IDiary>>> {
+        if (!user_id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "user_id is require"
+            }
+        }
+        const listDiaries = await travellerModel.getListDiaries(user_id);
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: listDiaries
+        }
+    },
+
+    async getListPosts(user_id: string | undefined): Promise<APIResponse<Array<IPost>>> {
+        if (!user_id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "user_id is require"
+            }
+        }
+        const ListPosts = await travellerModel.getListPosts(user_id);
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: ListPosts
+        }
+
+    }
 };
 
 export default travellerService;

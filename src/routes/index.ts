@@ -12,6 +12,7 @@ import diaryRouter from "./diary.route";
 import travellerRouter from "./traveller.route";
 import supporterRouter from "./supporter.route";
 import adminRouter from "./admin.route";
+import postReplyRouter from "./post-reply.route";
 
 function route(app: Express) {
     app.use("/users", userRouter);
@@ -27,6 +28,7 @@ function route(app: Express) {
     app.use("/travellers", travellerRouter);
     app.use("/supporters", supporterRouter);
     app.use("/admins", adminRouter);
+    app.use("/post-replies", postReplyRouter);
 }
 
 export default route;

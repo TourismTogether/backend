@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express"
 import postService from "../services/post.service";
+import postReplyService from "../services/post-reply.service";
 
 class PostController {
     // GET - /posts
@@ -17,6 +18,17 @@ class PostController {
         try {
             const { id } = req.params;
             const result = await postService.findById(id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // GET - /posts/:id/post-replies
+    async getListPostReplies(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const result = await postReplyService.getByPostId(id);
             return res.status(result.status).json(result);
         } catch (err) {
             next(err);

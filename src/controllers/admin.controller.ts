@@ -36,7 +36,7 @@ class AdminController {
     }
 
 
-    // PATCH - /admins
+    // PATCH - /admins/:user_id
     async updateAdminById(req: Request, res: Response, next: NextFunction) {
         try {
             const { user_id } = req.params;

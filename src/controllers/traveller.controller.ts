@@ -23,6 +23,28 @@ class TravellerController {
         }
     }
 
+    // GET - /travellers/:user_id/diaries
+    async getListDiaries(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { user_id } = req.params;
+            const result = await travellerService.getListDiaries(user_id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // GET - /travellers/:user_id/posts
+    async getListPosts(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { user_id } = req.params;
+            const result = await travellerService.getListPosts(user_id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     // POST - /travellers
     async createTraveller(req: Request, res: Response, next: NextFunction) {
         try {

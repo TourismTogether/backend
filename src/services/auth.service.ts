@@ -14,11 +14,13 @@ const authService = {
                 message: "Email already exists"
             }
         }
-        const isExistPhone = await userModel.findByPhone(user.phone);
-        if (isExistPhone) {
-            return {
-                status: STATUS.CONFLICT,
-                message: "Phone already exists"
+        if (user.phone) {
+            const isExistPhone = await userModel.findByPhone(user.phone);
+            if (isExistPhone) {
+                return {
+                    status: STATUS.CONFLICT,
+                    message: "Phone already exists"
+                }
             }
         }
         if (!account.password) {
