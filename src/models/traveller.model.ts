@@ -5,12 +5,12 @@ import { IPost } from "./post.model";
 export interface ITraveller {
     user_id?: string,
     bio: string,
-    is_shared_location: string,
+    is_shared_location: boolean,
     latitude: number,
     longitude: number,
-    travel_preference: Array<string>,
-    emergency_contacts: Array<string>,
-    is_safe: boolean
+    travel_preference?: Array<string>,
+    emergency_contacts?: Array<string>,
+    is_safe?: boolean
 }
 
 class TravellerModel {

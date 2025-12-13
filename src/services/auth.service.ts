@@ -5,6 +5,8 @@ import { accountModel, IAccount } from "../models/account.model";
 import { IUser, userModel } from "../models/user.model";
 import { error } from "console";
 import { IUserResponse } from "../dto/userResponse";
+import { ITraveller } from "../models/traveller.model";
+import travellerService from "./traveller.service";
 
 const authService = {
     async signUp(account: IAccount, user: IUser): Promise<APIResponse<{ account: IAccount, user: IUser }>> {
@@ -54,6 +56,18 @@ const authService = {
                 error: true
             }
         }
+
+        const newTraveller: ITraveller = {
+            user_id: newUser.id || "",
+            bio: "",
+            is_shared_location: false,
+            latitude: 0,
+            longitude: 0,
+            travel_preference: [],
+            emergency_contacts: [],
+            is_safe: true
+        }
+        travellerService.createOne(newTraveller);
 
         delete newAccount.password;
 
