@@ -4,9 +4,10 @@ import { APIResponse, STATUS } from "../types/response";
 import { accountModel, IAccount } from "../models/account.model";
 import { IUser, userModel } from "../models/user.model";
 import { error } from "console";
+import { IUserResponse } from "../dto/userResponse";
 
 const authService = {
-    async signUp(account: IAccount, user: IUser): Promise<APIResponse<Object>> {
+    async signUp(account: IAccount, user: IUser): Promise<APIResponse<{ account: IAccount, user: IUser }>> {
         const isExistEmail = await accountModel.findByEmail(account.email);
         if (isExistEmail) {
             return {
@@ -66,7 +67,7 @@ const authService = {
         }
     },
 
-    async signIn(account: IAccount): Promise<APIResponse<Object>> {
+    async signIn(account: IAccount): Promise<APIResponse<{ account: IAccount, user: IUser }>> {
         const emailAccount = await accountModel.findByEmail(account.email);
         if (!emailAccount || !emailAccount.id || !emailAccount.password) {
             return {
