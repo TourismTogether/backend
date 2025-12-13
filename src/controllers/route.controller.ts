@@ -3,7 +3,7 @@ import routeService from "../services/route.service";
 import { IRoute } from "../models/route.model";
 import { APIResponse } from "../types/response";
 
-interface IRouteBody extends Omit<IRoute, "id" | "created_at" | "updated_at"> {}
+interface IRouteBody extends Omit<IRoute, "id" | "created_at" | "updated_at"> { }
 
 class RouteController {
   // GET - /routes
