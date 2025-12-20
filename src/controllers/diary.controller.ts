@@ -38,8 +38,11 @@ class DiaryController {
     async createDiary(req: Request, res: Response, next: NextFunction) {
         try {
             const diary = req.body;
+
+            console.log(diary);
             const result = await diaryService.createOne(diary);
             return res.status(result.status).json(result)
+
         } catch (err) {
             next(err);
         }

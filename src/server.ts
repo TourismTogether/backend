@@ -26,6 +26,12 @@ app.use(cors({
 
 initDB();
 
+app.use(function (req, res, next) {
+    console.log(req.originalUrl);
+
+    next()
+})
+
 route(app);
 
 app.use(errorHandler);
