@@ -41,6 +41,8 @@ const assessDestinationService = {
     assess.updated_at = new Date();
 
     const result = await assessDestinationModel.createOne(assess);
+
+    console.log("Service Assess:", assess);
     if (!result) {
       return {
         status: STATUS.INTERNAL_SERVER_ERROR,

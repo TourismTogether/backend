@@ -16,21 +16,21 @@ import postReplyRouter from "./post-reply.route";
 import assessDestinationRouter from "./assessDestination.route";
 
 function route(app: Express) {
-    app.use("/users", userRouter);
-    app.use("/auth", authRouter);
-    app.use("/routes", routeRouter);
-    app.use("/accounts", accountRouter);
-    app.use("/trips", tripRouter);
-    app.use("/costs", costRouter);
-    app.use("/regions", regionRouter);
-    app.use("/destinations", destinationRouter);
-    app.use("/posts", postRouter);
-    app.use("/diaries", diaryRouter);
-    app.use("/travellers", travellerRouter);
-    app.use("/supporters", supporterRouter);
-    app.use("/admins", adminRouter);
-    app.use("/post-replies", postReplyRouter);
-    app.use("/api/assess-destination", assessDestinationRouter);
+  app.use("/users", userRouter);
+  app.use("/auth", authRouter);
+  app.use("/routes", routeRouter);
+  app.use("/accounts", accountRouter);
+  app.use("/trips", tripRouter);
+  app.use("/costs", costRouter);
+  app.use("/regions", regionRouter);
+  app.use("/destinations", destinationRouter);
+  app.use("/posts", postRouter);
+  app.use("/diaries", diaryRouter);
+  app.use("/travellers", travellerRouter);
+  app.use("/supporters", supporterRouter);
+  app.use("/admins", adminRouter);
+  app.use("/post-replies", postReplyRouter);
+  app.use("/api/assess-destination", assessDestinationRouter);
 }
 //new here
 
