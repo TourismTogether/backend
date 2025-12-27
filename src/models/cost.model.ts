@@ -70,6 +70,13 @@ class CostModel {
             `, [id]);
         return result.rowCount == null || result.rowCount > 0;
     }
+
+    async deleteByRouteId(route_id: string): Promise<boolean> {
+        const result = await db.query(`
+            DELETE FROM costs WHERE route_id = $1
+            `, [route_id]);
+        return result.rowCount == null || result.rowCount > 0;
+    }
 }
 
 export const costModel = new CostModel();

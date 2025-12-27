@@ -28,9 +28,17 @@ class PostController {
     async getListPostReplies(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
+            if (!id) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Post ID is required",
+                    error: true
+                });
+            }
             const result = await postReplyService.getByPostId(id);
             return res.status(result.status).json(result);
-        } catch (err) {
+        } catch (err: any) {
+            console.error("Error in getListPostReplies:", err);
             next(err);
         }
     }

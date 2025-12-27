@@ -117,7 +117,13 @@ class DiaryModel {
     async deleteById(id: string): Promise<boolean> {
         const sql = `DELETE FROM diaries WHERE id = $1`;
         const result = await db.query(sql, [id]);
-        return result.rowCount == null || result.rowCount > 0;;
+        return result.rowCount == null || result.rowCount > 0;
+    }
+
+    async deleteByTripId(trip_id: string): Promise<boolean> {
+        const sql = `DELETE FROM diaries WHERE trip_id = $1`;
+        const result = await db.query(sql, [trip_id]);
+        return result.rowCount == null || result.rowCount > 0;
     }
 }
 

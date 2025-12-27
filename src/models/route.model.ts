@@ -120,6 +120,16 @@ class RouteModel {
     return result.rowCount == null || result.rowCount > 0;
   }
 
+  async deleteByTripId(trip_id: string): Promise<boolean> {
+    const result = await db.query(
+      `
+            DELETE FROM routes WHERE trip_id = $1
+            `,
+      [trip_id]
+    );
+    return result.rowCount == null || result.rowCount > 0;
+  }
+
   async findListCost(id: string): Promise<Array<ICost>> {
     const query = `
             SELECT c.*

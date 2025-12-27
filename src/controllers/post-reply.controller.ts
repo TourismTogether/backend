@@ -30,6 +30,7 @@ class PostReplyController {
             const { id } = req.params;
             const postReply = req.body;
             const result = await postReplyService.update(id, postReply);
+            return res.status(result.status).json(result);
         } catch (err) {
             next(err);
         }

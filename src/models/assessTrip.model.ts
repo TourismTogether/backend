@@ -65,6 +65,14 @@ class AssessTripModel {
     );
     return result.rowCount != null && result.rowCount > 0;
   }
+
+  async deleteByTripId(tripId: string): Promise<boolean> {
+    const result = await db.query(
+      "DELETE FROM assess_trip WHERE trip_id = $1",
+      [tripId]
+    );
+    return result.rowCount != null && result.rowCount >= 0;
+  }
 }
 
 export const assessTripModel = new AssessTripModel();

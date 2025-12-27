@@ -52,6 +52,20 @@ const postReplyService = {
                 error: true
             };
         }
+        if (!reply.post_id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "post_id is required",
+                error: true
+            };
+        }
+        if (!reply.user_id) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "user_id is required",
+                error: true
+            };
+        }
         const post = await postModel.findById(reply.post_id);
         if (!post) {
             return {

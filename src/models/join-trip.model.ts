@@ -54,6 +54,14 @@ class JoinTripModel {
         );
         return result.rowCount !== null && result.rowCount > 0;
     }
+
+    async deleteByTripId(trip_id: string): Promise<boolean> {
+        const result = await db.query(
+            "DELETE FROM join_trip WHERE trip_id = $1",
+            [trip_id]
+        );
+        return result.rowCount !== null && result.rowCount >= 0;
+    }
 }
 
 export const joinTripModel = new JoinTripModel();

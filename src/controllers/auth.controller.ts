@@ -11,7 +11,12 @@ class AuthController {
         try {
             const { username, email, password, full_name, avatar_url, phone } = req.body;
             const account = { username, email, password };
-            const user = { full_name, avatar_url, phone };
+            // Use full_name if provided, otherwise use username as fallback
+            const user = { 
+                full_name: full_name || username || "User", 
+                avatar_url: avatar_url || "", 
+                phone: phone || "" 
+            };
             const result = await authService.signUp(account, user);
             if (result.status == STATUS.OK && result.data) {
                 (req.session as ISession).isAuthenticated = true;

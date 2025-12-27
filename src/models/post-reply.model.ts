@@ -15,6 +15,7 @@ class PostReplyModel {
             SELECT *
             FROM post_replies
             WHERE post_id = $1
+            ORDER BY created_at DESC
         `;
         const result = await db.query(sql, [post_id]);
         return result.rows;
