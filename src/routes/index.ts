@@ -14,6 +14,7 @@ import supporterRouter from "./supporter.route";
 import adminRouter from "./admin.route";
 import postReplyRouter from "./post-reply.route";
 import assessDestinationRouter from "./assessDestination.route";
+import aiRouter from "./ai.route";
 
 function route(app: Express) {
   app.use("/users", userRouter);
@@ -31,6 +32,7 @@ function route(app: Express) {
   app.use("/admins", adminRouter);
   app.use("/post-replies", postReplyRouter);
   app.use("/api/assess-destination", assessDestinationRouter);
+  app.use("/ai", aiRouter);
 }
 //new here
 
