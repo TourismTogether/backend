@@ -87,23 +87,51 @@ class RouteModel {
     id: string,
     route: Partial<IRoute>
   ): Promise<IRoute | undefined> {
-    const { id: routeId, ...fieldsToUpdate } = route;
+    // Create a copy without id, created_at, and updated_at (we'll set updated_at separately)
+    const fieldsToUpdate: Partial<IRoute> = { ...route };
+    delete fieldsToUpdate.id;
+    delete fieldsToUpdate.created_at;
+    delete fieldsToUpdate.updated_at; // Remove updated_at as we'll set it separately
 
-    const keys = Object.keys(fieldsToUpdate) as Array<keyof Partial<IRoute>>;
-    if (keys.length === 0) return undefined;
+    // Filter out undefined values and only include fields that exist in dbFieldsMap
+    const validKeys = (
+      Object.keys(fieldsToUpdate) as Array<keyof IRoute>
+    ).filter((key) => {
+      // Only include keys that exist in dbFieldsMap and have non-undefined values
+      const value = fieldsToUpdate[key];
+      return (
+        key in RouteModel.dbFieldsMap && value !== undefined && value !== null
+      );
+    }) as Array<keyof typeof RouteModel.dbFieldsMap>;
+
+    if (validKeys.length === 0) return undefined;
 
     // Tạo SET clause với tên cột DB và ánh xạ
-    const setClause = keys
-      .map((key, idx) => `${RouteModel.dbFieldsMap[key]} = $${idx + 2}`)
+    const setClause = validKeys
+      .map((key, idx) => {
+        const dbField = RouteModel.dbFieldsMap[key];
+        if (!dbField) {
+          throw new Error(`Field mapping not found for key: ${String(key)}`);
+        }
+        return `${dbField} = $${idx + 2}`;
+      })
       .join(", ");
-    const values = Object.values(fieldsToUpdate);
+
+    const values: any[] = validKeys.map((key) => fieldsToUpdate[key]);
     values.unshift(id);
+
+    // Always update updated_at
+    const finalSetClause = `${setClause}, updated_at = $${values.length + 1}`;
+    values.push(new Date());
 
     const query = `
             UPDATE routes
-            SET ${setClause}
+            SET ${finalSetClause}
             WHERE id = $1
-            RETURNING *;
+            RETURNING id, index, trip_id, title, description, 
+                     lng_start AS "lngStart", lat_start AS "latStart", 
+                     lng_end AS "lngEnd", lat_end AS "latEnd",
+                     created_at, updated_at;
         `;
 
     const data = await db.query<IRoute>(query, values);
