@@ -3,23 +3,23 @@ import { db } from "../configs/db";
 export interface IDiary {
     id?: string;
 
-    trip_id: string | null;
-    user_id: string | null;
+    user_id: string;
+    trip_id?: string | null;
 
     title: string;
-    description: string;
+    description?: string | null;
 
-    is_public: boolean;
-    allow_comment?: boolean;
+    // JSONB
+    content_sections?: any[] | null;
+    metadata?: any[] | null;
 
-    video_url: string | null;
-    img_url: string[] | null;
+    // Images
+    main_image_url?: string | null;
+    image_urls?: string[] | null;
 
-    tags?: string | null;
-    template?: string | null;
-
-    feeling_des?: string | null;
-    weather_des?: string | null;
+    // Flags
+    is_public?: boolean;
+    is_draft?: boolean;
 
     created_at?: Date;
     updated_at?: Date;
@@ -47,41 +47,40 @@ class DiaryModel {
     async createOne(diary: IDiary): Promise<IDiary | undefined> {
         const sql = `
             INSERT INTO diaries (
-                trip_id,
-                user_id,
-                title,
-                description,
-                is_public,
-                video_url,
-                img_url,
-                allow_comment,
-                tags,
-                template,
-                feeling_des,
-                weather_des,
-                created_at,
-                updated_at
-            )
-            VALUES (
-                $1, $2, $3, $4, $5, $6, $7::jsonb,
-                $8, $9, $10, $11, $12,
-                $13, $14
-            )
-            RETURNING *
+            user_id,
+            trip_id,
+            title,
+            description,
+            content_sections,
+            metadata,
+            main_image_url,
+            image_urls,
+            is_public,
+            is_draft,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            $1, $2, $3, $4,
+            $5::jsonb,
+            $6::jsonb,
+            $7,
+            $8::jsonb,
+            $9, $10, $11, $12
+        )
+        RETURNING *;
             `;
         const values = [
-            diary.trip_id,
             diary.user_id,
+            diary.trip_id ?? null,
             diary.title,
-            diary.description,
-            diary.is_public,
-            diary.video_url,
-            JSON.stringify(diary.img_url),
-            diary.allow_comment,
-            diary.tags,
-            diary.template,
-            diary.feeling_des,
-            diary.weather_des,
+            diary.description ?? null,
+            JSON.stringify(diary.content_sections ?? []),
+            JSON.stringify(diary.metadata ?? []),
+            diary.main_image_url ?? null,
+            JSON.stringify(diary.image_urls ?? []),
+            diary.is_public ?? false,
+            diary.is_draft ?? false,
             diary.created_at,
             diary.updated_at,
         ];
@@ -94,11 +93,12 @@ class DiaryModel {
         const keys = Object.keys(fieldsToUpdate);
         if (keys.length === 0) return undefined;
 
+        const jsonbFields = ["content_sections", "metadata", "image_urls"];
         const values: any[] = [id]; // $1 will be the id in WHERE clause
 
         const setParts = keys.map((key, idx) => {
             const placeholder = `$${idx + 2}`;
-            if (key === "img_url") {
+            if (jsonbFields.includes(key)) {
                 const val = (fieldsToUpdate as any)[key];
                 values.push(JSON.stringify(val));
                 return `${key} = ${placeholder}::jsonb`;
@@ -107,6 +107,7 @@ class DiaryModel {
             return `${key} = ${placeholder}`;
         });
 
+        setParts.push(`updated_at = NOW()`);
         const setClause = setParts.join(", ");
         const sql = `UPDATE diaries SET ${setClause} WHERE id = $1 RETURNING *`;
 
