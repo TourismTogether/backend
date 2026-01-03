@@ -19,8 +19,21 @@ class AuthController {
             };
             const result = await authService.signUp(account, user);
             if (result.status == STATUS.OK && result.data) {
-                (req.session as ISession).isAuthenticated = true;
-                (req.session as ISession).user = result.data.user;
+                // Regenerate session to prevent session fixation and ensure new cookie is set
+                req.session.regenerate((err) => {
+                    if (err) {
+                        return res.status(STATUS.INTERNAL_SERVER_ERROR).json({
+                            status: STATUS.INTERNAL_SERVER_ERROR,
+                            message: "Session error"
+                        });
+                    }
+                    (req.session as ISession).isAuthenticated = true;
+                    (req.session as ISession).user = result.data!.user;
+                    req.session.save(() => {
+                        res.status(result.status).json(result);
+                    });
+                });
+                return;
             }
             res.status(result.status).json(result);
         } catch (err) {
@@ -35,8 +48,21 @@ class AuthController {
             const account = { username, email, password };
             const result = await authService.signIn(account);
             if (result.status == STATUS.OK && result.data) {
-                (req.session as ISession).isAuthenticated = true;
-                (req.session as ISession).user = result.data.user;
+                // Regenerate session to prevent session fixation and ensure new cookie is set
+                req.session.regenerate((err) => {
+                    if (err) {
+                        return res.status(STATUS.INTERNAL_SERVER_ERROR).json({
+                            status: STATUS.INTERNAL_SERVER_ERROR,
+                            message: "Session error"
+                        });
+                    }
+                    (req.session as ISession).isAuthenticated = true;
+                    (req.session as ISession).user = result.data!.user;
+                    req.session.save(() => {
+                        res.status(result.status).json(result);
+                    });
+                });
+                return;
             }
             res.status(result.status).json(result);
         } catch (err) {
@@ -75,10 +101,12 @@ class AuthController {
         try {
             (req.session as ISession).isAuthenticated = false;
             (req.session as ISession).user = null;
-            res.status(STATUS.OK).json({
-                status: STATUS.OK,
-                message: "Successfully"
-            })
+            req.session.save(() => {
+                res.status(STATUS.OK).json({
+                    status: STATUS.OK,
+                    message: "Successfully"
+                });
+            });
         } catch (err) {
             next(err);
         }

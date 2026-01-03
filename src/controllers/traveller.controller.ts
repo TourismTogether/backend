@@ -78,6 +78,27 @@ class TravellerController {
             next(err);
         }
     }
+
+    // GET - /travellers/sos/all - Sử dụng service findAllSOS
+    async getAllSOS(req: Request, res: Response, next: NextFunction) {
+        try {
+            const result = await travellerService.findAllSOS();
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // GET - /travellers/sos/supporter/:supporter_id - Sử dụng service findSOSBySupporterId
+    async getSOSBySupporterId(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { supporter_id } = req.params;
+            const result = await travellerService.findSOSBySupporterId(supporter_id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default new TravellerController();

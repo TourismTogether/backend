@@ -164,7 +164,102 @@ const travellerService = {
             message: "Successfully",
             data: ListPosts
         }
+    },
 
+    async findAllSOS(): Promise<APIResponse<Array<ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string }>>> {
+        // Sử dụng findAll() có sẵn và filter
+        const allTravellers = await travellerModel.findAll();
+        const sosTravellers = allTravellers.filter(
+            (t) => t.is_safe === false && t.is_shared_location === true
+        );
+
+        // Fetch user info cho mỗi SOS traveller
+        const sosWithUsers = await Promise.all(
+            sosTravellers.map(async (traveller) => {
+                if (!traveller.user_id) return traveller as ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string };
+                try {
+                    const user = await userModel.findById(traveller.user_id);
+                    const result: ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string } = {
+                        ...traveller,
+                    };
+                    if (user?.full_name) result.user_full_name = user.full_name;
+                    if (user?.phone) result.user_phone = user.phone;
+                    if (user?.avatar_url) result.user_avatar_url = user.avatar_url;
+                    return result;
+                } catch {
+                    return traveller as ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string };
+                }
+            })
+        );
+
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: sosWithUsers
+        };
+    },
+
+    async findSOSBySupporterId(supporterId: string | undefined): Promise<APIResponse<Array<ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string }>>> {
+        if (!supporterId) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "supporter_id is undefined",
+                error: true
+            };
+        }
+
+        // Sử dụng findAll() có sẵn và filter
+        const allTravellers = await travellerModel.findAll();
+        const sosTravellers = allTravellers.filter((t) => {
+            if (t.is_safe !== false || t.is_shared_location !== true) return false;
+            
+            // Parse emergency_contacts từ jsonb (có thể là string hoặc array)
+            let contacts: string[] = [];
+            if (t.emergency_contacts) {
+                if (typeof t.emergency_contacts === 'string') {
+                    try {
+                        contacts = JSON.parse(t.emergency_contacts);
+                    } catch {
+                        contacts = [];
+                    }
+                } else if (Array.isArray(t.emergency_contacts)) {
+                    contacts = t.emergency_contacts;
+                }
+            }
+            
+            // Nếu không có contacts hoặc rỗng -> yêu cầu chung (màu vàng)
+            if (!contacts || contacts.length === 0) {
+                return true;
+            }
+            
+            // Kiểm tra xem supporterId có trong emergency_contacts không
+            return contacts.includes(supporterId);
+        });
+
+        // Fetch user info cho mỗi SOS traveller
+        const sosWithUsers = await Promise.all(
+            sosTravellers.map(async (traveller) => {
+                if (!traveller.user_id) return traveller as ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string };
+                try {
+                    const user = await userModel.findById(traveller.user_id);
+                    const result: ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string } = {
+                        ...traveller,
+                    };
+                    if (user?.full_name) result.user_full_name = user.full_name;
+                    if (user?.phone) result.user_phone = user.phone;
+                    if (user?.avatar_url) result.user_avatar_url = user.avatar_url;
+                    return result;
+                } catch {
+                    return traveller as ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string };
+                }
+            })
+        );
+
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: sosWithUsers
+        };
     }
 };
 

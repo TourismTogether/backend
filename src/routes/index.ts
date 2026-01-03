@@ -34,6 +34,5 @@ function route(app: Express) {
   app.use("/api/assess-destination", assessDestinationRouter);
   app.use("/ai", aiRouter);
 }
-//new here
 
 export default route;
