@@ -38,5 +38,5 @@ app.use(errorHandler);
 app.use(notFoundHandler);
 
 app.listen(port, () => {
-    console.log(`App listening on port ${port}`);
+    // Server started
 });
