@@ -16,9 +16,7 @@ const assessDestinationService = {
       };
     }
 
-    const data = await assessDestinationModel.findByDestinationId(
-      destinationId
-    );
+    const data = await assessDestinationModel.findByDestinationId(destinationId);
     return {
       status: STATUS.OK,
       message: "Successfully",
@@ -29,10 +27,10 @@ const assessDestinationService = {
   async createOne(
     assess: IAssessDestination
   ): Promise<APIResponse<IAssessDestination>> {
-    if (!assess.traveller_id || !assess.destination_id) {
+    if (!assess.traveller_id || !assess.destination_id || !assess.rating_star) {
       return {
         status: STATUS.BAD_REQUEST,
-        message: "missing ids",
+        message: "missing required fields",
         error: true,
       };
     }
@@ -42,7 +40,6 @@ const assessDestinationService = {
 
     const result = await assessDestinationModel.createOne(assess);
 
-    console.log("Service Assess:", assess);
     if (!result) {
       return {
         status: STATUS.INTERNAL_SERVER_ERROR,
@@ -51,51 +48,62 @@ const assessDestinationService = {
       };
     }
 
-    return { status: STATUS.OK, message: "Successfully", data: result };
+    return { status: STATUS.OK, message: "Successfully created", data: result };
   },
 
   async updateOne(
     assess: IAssessDestination
   ): Promise<APIResponse<IAssessDestination>> {
+    if (!assess.traveller_id || !assess.destination_id || assess.no == null) {
+      return {
+        status: STATUS.BAD_REQUEST,
+        message: "missing traveller_id, destination_id or no",
+        error: true,
+      };
+    }
+
     assess.updated_at = new Date();
 
     const result = await assessDestinationModel.updateOne(assess);
     if (!result) {
       return {
-        status: STATUS.INTERNAL_SERVER_ERROR,
-        message: "failed to update",
+        status: STATUS.NOT_FOUND,
+        message: "Review not found or not updated",
         error: true,
       };
     }
 
-    return { status: STATUS.OK, message: "Successfully", data: result };
+    return { status: STATUS.OK, message: "Successfully updated", data: result };
   },
 
   async deleteOne(
     travellerId: string | undefined,
-    destinationId: string | undefined
+    destinationId: string | undefined,
+    no: number | undefined
   ): Promise<APIResponse<null>> {
-    if (!travellerId || !destinationId) {
+    if (!travellerId || !destinationId || no == null) {
       return {
         status: STATUS.BAD_REQUEST,
-        message: "missing ids",
+        message: "missing traveller_id, destination_id or no",
         error: true,
       };
     }
 
-    const result = await assessDestinationModel.deleteOne(
+    const success = await assessDestinationModel.deleteOne(
       travellerId,
-      destinationId
+      destinationId,
+      no
     );
-    if (!result) {
+
+    if (!success) {
       return {
-        status: STATUS.INTERNAL_SERVER_ERROR,
-        message: "failed to delete",
+        status: STATUS.NOT_FOUND,
+        message: "Review not found or already deleted",
         error: true,
       };
     }
 
-    return { status: STATUS.OK, message: "Successfully" };
+    return { status: STATUS.OK, message: "Successfully deleted" };
   },
 };
 
