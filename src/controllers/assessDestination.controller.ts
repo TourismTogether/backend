@@ -15,7 +15,6 @@ class AssessDestinationController {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log("Request Body:", req.body);
       const result = await assessDestinationService.createOne(req.body);
       res.status(result.status).json(result);
     } catch (err) {
@@ -34,10 +33,20 @@ class AssessDestinationController {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const { traveller_id, destination_id } = req.body;
+      const { traveller_id, destination_id, no } = req.body;
+
+      if (!traveller_id || !destination_id || no == null) {
+        return res.status(400).json({
+          status: 400,
+          message: "Missing required fields: traveller_id, destination_id, no",
+          error: true,
+        });
+      }
+
       const result = await assessDestinationService.deleteOne(
         traveller_id,
-        destination_id
+        destination_id,
+        no
       );
       res.status(result.status).json(result);
     } catch (err) {
