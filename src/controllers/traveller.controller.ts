@@ -78,6 +78,17 @@ class TravellerController {
             next(err);
         }
     }
+
+    // GET - /travellers/sos/supporter/:supporter_id
+    async getSOSBySupporterId(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { supporter_id } = req.params;
+            const result = await travellerService.findSOSBySupporterId(supporter_id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default new TravellerController();

@@ -164,7 +164,23 @@ const travellerService = {
             message: "Successfully",
             data: ListPosts
         }
+    },
 
+    async findSOSBySupporterId(supporterId: string | undefined): Promise<APIResponse<Array<ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string }>>> {
+        if (!supporterId) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "supporter_id is undefined",
+                error: true,
+            };
+        }
+
+        const sosTravellers = await travellerModel.findSOSBySupporterId(supporterId);
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: sosTravellers,
+        };
     }
 };
 
