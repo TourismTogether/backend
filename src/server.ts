@@ -10,18 +10,7 @@ const app: Express = express();
 const port = config.port;
 
 app.set("trust proxy", 1); // trust first proxy
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "keyboard cat",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    },
-  })
-);
+
 // CORS must be configured before other middleware
 const allowedOrigins = [
   "http://localhost:3000",
@@ -66,6 +55,21 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
+
+app.use(
+  session({
+    name: "sid",
+    secret: "keyboard cat",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
   })
 );
 
