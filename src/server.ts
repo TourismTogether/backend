@@ -25,20 +25,19 @@ const allowedOrigins = [
   "https://www.tourism-together.vercel.app", // Handle www variant
 ];
 
+// Track seen origins to reduce logging noise
+const seenOrigins = new Set<string>();
+
 app.use(
   cors({
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) {
-        console.log("CORS: Request with no origin, allowing");
         return callback(null, true);
       }
 
       // Normalize origin (remove trailing slash)
       const normalizedOrigin = origin.replace(/\/$/, "");
-
-      console.log(`CORS: Checking origin: ${normalizedOrigin}`);
-      console.log(`CORS: Allowed origins: ${allowedOrigins.join(", ")}`);
 
       // Check if origin matches any allowed origin
       const isAllowed = allowedOrigins.some((allowed) => {
@@ -47,10 +46,15 @@ app.use(
       });
 
       if (isAllowed) {
-        console.log(`CORS: Origin ${normalizedOrigin} is allowed`);
+        // Only log new origins once to reduce noise
+        if (!seenOrigins.has(normalizedOrigin)) {
+          console.log(`CORS: Allowed origin: ${normalizedOrigin}`);
+          seenOrigins.add(normalizedOrigin);
+        }
         callback(null, true);
       } else {
-        console.log(`CORS: Origin ${normalizedOrigin} is NOT allowed`);
+        // Always log blocked origins for security monitoring
+        console.warn(`CORS: Blocked origin: ${normalizedOrigin}`);
         callback(new Error(`Not allowed by CORS: ${normalizedOrigin}`));
       }
     },

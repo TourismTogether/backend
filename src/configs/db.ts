@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 import config from "./config";
 
 // Configure pool for serverless environments
@@ -27,6 +27,63 @@ export const db = new Pool({
 db.on("error", (err) => {
   console.error("Unexpected error on idle client", err);
 });
+
+// Retry wrapper for queries with exponential backoff
+async function retryQuery<T extends QueryResultRow = any>(
+  queryFn: () => Promise<QueryResult<T>>,
+  maxRetries: number = 3,
+  initialDelay: number = 100
+): Promise<QueryResult<T>> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await queryFn();
+    } catch (error: any) {
+      lastError = error;
+
+      // Check if it's a connection error that we should retry
+      const isConnectionError =
+        error?.code === "08006" || // Connection failure
+        error?.code === "XX000" || // MaxClientsInSessionMode
+        error?.message?.includes("max clients") ||
+        error?.message?.includes("connection");
+
+      if (isConnectionError && attempt < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        console.log(
+          `Connection error, retrying in ${delay}ms (attempt ${
+            attempt + 1
+          }/${maxRetries})...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      // If it's not a connection error or we've exhausted retries, throw
+      throw error;
+    }
+  }
+
+  throw lastError || new Error("Query failed after retries");
+}
+
+// Wrapper for db.query with retry logic
+export const queryWithRetry = async <T extends QueryResultRow = any>(
+  text: string,
+  params?: any[]
+): Promise<QueryResult<T>> => {
+  return retryQuery(() => db.query<T>(text, params));
+};
+
+// Override the pool's query method to include retry logic for connection errors
+const originalQuery = db.query.bind(db);
+(db as any).query = function <T extends QueryResultRow = any>(
+  text: string,
+  params?: any[]
+): Promise<QueryResult<T>> {
+  return retryQuery(() => originalQuery<T>(text, params));
+};
 
 export async function initDB() {
   console.log("Connecting....");
