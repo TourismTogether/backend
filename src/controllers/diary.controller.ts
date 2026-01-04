@@ -39,7 +39,6 @@ class DiaryController {
         try {
             const diary = req.body;
 
-            console.log(diary);
             const result = await diaryService.createOne(diary);
             return res.status(result.status).json(result)
 
