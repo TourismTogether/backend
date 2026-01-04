@@ -16,11 +16,12 @@ export const db = new Pool({
         rejectUnauthorized: false,
       }
     : false,
-  // Connection pool settings for serverless
-  max: isServerless ? 1 : 10, // Max 1 connection per serverless function instance
-  min: 0, // Don't maintain minimum connections in serverless
+  // Connection pool settings
+  max: isServerless ? 1 : 20, // Increased pool size for better concurrency
+  min: 0, // Don't maintain minimum connections
   idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
   connectionTimeoutMillis: 10000, // Timeout after 10 seconds
+  allowExitOnIdle: true, // Allow process to exit when pool is idle
 });
 
 // Handle pool errors without crashing
@@ -31,8 +32,8 @@ db.on("error", (err) => {
 // Retry wrapper for queries with exponential backoff
 async function retryQuery<T extends QueryResultRow = any>(
   queryFn: () => Promise<QueryResult<T>>,
-  maxRetries: number = 3,
-  initialDelay: number = 100
+  maxRetries: number = 2,
+  initialDelay: number = 500
 ): Promise<QueryResult<T>> {
   let lastError: Error | null = null;
 
@@ -47,15 +48,15 @@ async function retryQuery<T extends QueryResultRow = any>(
         error?.code === "08006" || // Connection failure
         error?.code === "XX000" || // MaxClientsInSessionMode
         error?.message?.includes("max clients") ||
+        error?.message?.includes("MaxClientsInSessionMode") ||
         error?.message?.includes("connection");
 
       if (isConnectionError && attempt < maxRetries - 1) {
-        const delay = initialDelay * Math.pow(2, attempt);
-        console.log(
-          `Connection error, retrying in ${delay}ms (attempt ${
-            attempt + 1
-          }/${maxRetries})...`
-        );
+        // Longer delay for max clients error to allow pool to free up
+        const baseDelay = error?.message?.includes("max clients") || error?.code === "XX000" 
+          ? 2000 
+          : initialDelay;
+        const delay = baseDelay * Math.pow(2, attempt);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }

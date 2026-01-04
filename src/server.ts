@@ -21,6 +21,7 @@ app.use(
 // CORS must be configured before other middleware
 const allowedOrigins = [
   "http://localhost:3000",
+  "http://192.168.56.1:3000",
   "https://tourism-together.vercel.app",
   "https://www.tourism-together.vercel.app", // Handle www variant
 ];
