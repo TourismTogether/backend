@@ -16,26 +16,7 @@ export interface ITraveller {
 class TravellerModel {
     async findAll(): Promise<Array<ITraveller>> {
         const result = await db.query(`SELECT * FROM travellers`);
-        // Parse jsonb fields to arrays
-        return result.rows.map((row: any) => ({
-            ...row,
-            emergency_contacts: this.parseJsonbField(row.emergency_contacts),
-            travel_preference: this.parseJsonbField(row.travel_preference),
-        }));
-    }
-
-    private parseJsonbField(field: any): Array<string> | undefined {
-        if (!field) return undefined;
-        if (Array.isArray(field)) return field;
-        if (typeof field === 'string') {
-            try {
-                const parsed = JSON.parse(field);
-                return Array.isArray(parsed) ? parsed : undefined;
-            } catch {
-                return undefined;
-            }
-        }
-        return undefined;
+        return result.rows;
     }
 
     async findById(userId: string): Promise<ITraveller | undefined> {
@@ -43,14 +24,7 @@ class TravellerModel {
             `SELECT * FROM travellers WHERE user_id = $1`,
             [userId]
         );
-        if (!result.rows[0]) return undefined;
-        const row = result.rows[0];
-        // Parse jsonb fields to arrays
-        return {
-            ...row,
-            emergency_contacts: this.parseJsonbField(row.emergency_contacts),
-            travel_preference: this.parseJsonbField(row.travel_preference),
-        };
+        return result.rows[0];
     }
 
     async createOne(traveller: ITraveller): Promise<ITraveller | undefined> {
@@ -80,25 +54,11 @@ class TravellerModel {
         const keys = Object.keys(traveller);
         if (keys.length === 0) return undefined;
 
-        // Xử lý special case cho jsonb fields
         const setClause = keys
-            .map((key, idx) => {
-                // Nếu là emergency_contacts hoặc travel_preference, cast sang jsonb
-                if (key === 'emergency_contacts' || key === 'travel_preference') {
-                    return `${key} = $${idx + 2}::jsonb`;
-                }
-                return `${key} = $${idx + 2}`;
-            })
+            .map((key, idx) => `${key} = $${idx + 2}`)
             .join(", ");
 
-        const values = Object.values(traveller).map((val, idx) => {
-            const key = keys[idx];
-            // Convert array to JSON string for jsonb fields
-            if ((key === 'emergency_contacts' || key === 'travel_preference') && Array.isArray(val)) {
-                return JSON.stringify(val);
-            }
-            return val;
-        });
+        const values = Object.values(traveller);
         values.unshift(user_id);
 
         const query = `
