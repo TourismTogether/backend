@@ -63,7 +63,15 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-initDB();
+// Initialize DB connection (non-blocking for serverless)
+// In serverless, connections are created lazily on first use
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+if (!isServerless) {
+  // Only call initDB() in non-serverless environments
+  initDB().catch((err) => {
+    console.error("Failed to initialize DB:", err);
+  });
+}
 
 app.use(function (req, res, next) {
   console.log(req.originalUrl);
