@@ -7,7 +7,8 @@ interface Config {
     databasePort: number,
     databaseUser: string,
     databasePassword: string,
-    databaseName: string
+    databaseName: string,
+    databaseSSL: boolean
 }
 
 const config: Config = {
@@ -17,7 +18,8 @@ const config: Config = {
     databasePort: Number(process.env.DATABASE_PORT) || 5432,
     databaseUser: process.env.DATABASE_USER || "",
     databasePassword: process.env.DATABASE_PASSWORD || "",
-    databaseName: process.env.DATABASE_NAME || "postgre"
+    databaseName: process.env.DATABASE_NAME || "postgre",
+    databaseSSL: process.env.DATABASE_SSL === "true" || process.env.NODE_ENV === "production"
 }
 
 export default config;
