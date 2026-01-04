@@ -18,29 +18,50 @@ app.use(
     cookie: { secure: false },
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-// app.use(cors());
+// CORS must be configured before other middleware
 const allowedOrigins = [
   "http://localhost:3000",
   "https://tourism-together.vercel.app",
+  "https://www.tourism-together.vercel.app", // Handle www variant
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log("CORS: Request with no origin, allowing");
+        return callback(null, true);
+      }
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // Normalize origin (remove trailing slash)
+      const normalizedOrigin = origin.replace(/\/$/, "");
+
+      console.log(`CORS: Checking origin: ${normalizedOrigin}`);
+      console.log(`CORS: Allowed origins: ${allowedOrigins.join(", ")}`);
+
+      // Check if origin matches any allowed origin
+      const isAllowed = allowedOrigins.some((allowed) => {
+        const normalizedAllowed = allowed.replace(/\/$/, "");
+        return normalizedOrigin === normalizedAllowed;
+      });
+
+      if (isAllowed) {
+        console.log(`CORS: Origin ${normalizedOrigin} is allowed`);
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        console.log(`CORS: Origin ${normalizedOrigin} is NOT allowed`);
+        callback(new Error(`Not allowed by CORS: ${normalizedOrigin}`));
       }
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 initDB();
 
