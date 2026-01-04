@@ -17,10 +17,11 @@ export const db = new Pool({
       }
     : false,
   // Connection pool settings
-  max: isServerless ? 1 : 20, // Increased pool size for better concurrency
+  // Reduced pool size to avoid Supabase connection limits
+  max: isServerless ? 1 : 5, // Smaller pool to avoid max clients error
   min: 0, // Don't maintain minimum connections
-  idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-  connectionTimeoutMillis: 10000, // Timeout after 10 seconds
+  idleTimeoutMillis: 10000, // Close idle connections after 10 seconds (faster cleanup)
+  connectionTimeoutMillis: 5000, // Timeout after 5 seconds
   allowExitOnIdle: true, // Allow process to exit when pool is idle
 });
 
@@ -87,17 +88,35 @@ const originalQuery = db.query.bind(db);
 };
 
 export async function initDB() {
-  console.log("Connecting....");
-  try {
-    const client = await db.connect();
-    await client.query("SELECT 1");
-    client.release(); // Release the connection back to the pool
-    console.log("PostgreSQL connected");
-  } catch (err) {
-    console.error("DB connection failed:", err);
-    // Don't exit in serverless - let the function handle it gracefully
-    if (!isServerless) {
-      process.exit(1);
+  const maxRetries = 5;
+  const initialDelay = 3000; // Start with 3 seconds delay
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const client = await db.connect();
+      await client.query("SELECT 1");
+      client.release(); // Release the connection back to the pool
+      console.log("PostgreSQL connected");
+      return; // Success, exit function
+    } catch (err: any) {
+      const isMaxClientsError = 
+        err?.code === "XX000" || 
+        err?.message?.includes("max clients") ||
+        err?.message?.includes("MaxClientsInSessionMode");
+      
+      if (isMaxClientsError && attempt < maxRetries - 1) {
+        const delay = initialDelay * (attempt + 1); // Increasing delay: 3s, 6s, 9s, 12s, 15s
+        console.warn(`DB connection pool full, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // If not max clients error or exhausted retries, log and continue
+      // Don't exit process - let connections be created lazily on first use
+      console.warn("DB connection failed, will retry on first query:", err?.message || err);
+      return; // Exit function but don't crash server
     }
   }
+  
+  console.warn("DB initialization failed after retries, connections will be created on demand");
 }
