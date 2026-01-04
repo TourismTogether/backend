@@ -9,28 +9,28 @@ import session from "express-session";
 const app: Express = express();
 const port = config.port;
 
-// CORS phải đặt trước session để xử lý preflight requests
-app.use(cors({
-    origin: ["http://localhost:3000", "http://192.168.56.1:3000"],
-    credentials: true
-}));
-
 app.set('trust proxy', 1) // trust first proxy
 app.use(session({
     secret: 'keyboard cat',
     resave: false,
-    saveUninitialized: false,
-    cookie: { 
-        secure: false,
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
+    saveUninitialized: true,
+    cookie: { secure: false }
+}))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// app.use(cors());
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+}));
 
 initDB();
+
+app.use(function (req, res, next) {
+    console.log(req.originalUrl);
+
+    next()
+})
 
 route(app);
 
@@ -38,5 +38,5 @@ app.use(errorHandler);
 app.use(notFoundHandler);
 
 app.listen(port, () => {
-    // Server started
+    console.log(`App listening on port ${port}`);
 });
