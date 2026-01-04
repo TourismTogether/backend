@@ -12,10 +12,14 @@ const port = config.port;
 app.set("trust proxy", 1); // trust first proxy
 app.use(
   session({
-    secret: "keyboard cat",
+    secret: process.env.SESSION_SECRET || "keyboard cat",
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    },
   })
 );
 // CORS must be configured before other middleware
