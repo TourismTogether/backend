@@ -41,7 +41,15 @@ class RegionController {
             const { id } = req.params;
             const result = await regionService.deleteById(id);
             return res.status(result.status).json(result);
-        } catch (err) {
+        } catch (err: any) {
+            // Handle foreign key constraint error
+            if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Cannot delete region. It is being used by one or more destinations. Please remove or update those destinations first.",
+                    error: true
+                });
+            }
             next(err);
         }
     }

@@ -58,6 +58,14 @@ class RegionModel {
         return data.rows[0];
     }
 
+    async countDestinationsByRegionId(id: string): Promise<number> {
+        const result = await db.query<{ count: string }>(
+            "SELECT COUNT(*) as count FROM destinations WHERE region_id = $1",
+            [id]
+        );
+        return parseInt(result.rows[0]?.count || "0", 10);
+    }
+
     async deleteById(id: string): Promise<boolean> {
         const result = await db.query("DELETE FROM regions WHERE id = $1", [id]);
         return result.rowCount == null || result.rowCount > 0;
