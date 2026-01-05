@@ -106,18 +106,40 @@ const regionService = {
             };
         }
 
-        const result = await regionModel.deleteById(id);
-        if (!result) {
+        // Check if region is being used by destinations
+        const destinationCount = await regionModel.countDestinationsByRegionId(id);
+        if (destinationCount > 0) {
             return {
-                status: STATUS.INTERNAL_SERVER_ERROR,
-                message: "failed to delete region",
+                status: STATUS.BAD_REQUEST,
+                message: `Cannot delete region. It is being used by ${destinationCount} destination(s). Please remove or update those destinations first.`,
                 error: true
             };
         }
-        return {
-            status: STATUS.OK,
-            message: "Successfully"
-        };
+
+        try {
+            const result = await regionModel.deleteById(id);
+            if (!result) {
+                return {
+                    status: STATUS.INTERNAL_SERVER_ERROR,
+                    message: "failed to delete region",
+                    error: true
+                };
+            }
+            return {
+                status: STATUS.OK,
+                message: "Successfully"
+            };
+        } catch (err: any) {
+            // Handle foreign key constraint error
+            if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+                return {
+                    status: STATUS.BAD_REQUEST,
+                    message: "Cannot delete region. It is being used by one or more destinations. Please remove or update those destinations first.",
+                    error: true
+                };
+            }
+            throw err;
+        }
     }
 
 };
