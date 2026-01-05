@@ -89,6 +89,16 @@ class TravellerController {
             next(err);
         }
     }
+
+    // GET - /travellers/sos/all (Admin only)
+    async getAllSOS(req: Request, res: Response, next: NextFunction) {
+        try {
+            const result = await travellerService.findAllSOS();
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default new TravellerController();

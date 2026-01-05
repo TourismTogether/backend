@@ -164,6 +164,34 @@ class TravellerModel {
                 : row.travel_preference || [],
         }));
     }
+
+    async findAllSOS(): Promise<Array<ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string }>> {
+        const query = `
+            SELECT 
+                t.*,
+                u.full_name as user_full_name,
+                u.phone as user_phone,
+                u.avatar_url as user_avatar_url
+            FROM travellers t
+            LEFT JOIN users u ON u.id = t.user_id
+            WHERE t.is_shared_location = true
+            ORDER BY 
+                CASE WHEN t.is_safe = false THEN 0 ELSE 1 END,
+                t.user_id DESC
+        `;
+        const result = await db.query(query);
+        
+        // Parse JSONB fields
+        return result.rows.map((row: any) => ({
+            ...row,
+            emergency_contacts: typeof row.emergency_contacts === 'string' 
+                ? JSON.parse(row.emergency_contacts) 
+                : row.emergency_contacts || [],
+            travel_preference: typeof row.travel_preference === 'string'
+                ? JSON.parse(row.travel_preference)
+                : row.travel_preference || [],
+        }));
+    }
 }
 
 export const travellerModel = new TravellerModel();

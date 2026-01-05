@@ -4,6 +4,7 @@ import travellerController from "../controllers/traveller.controller";
 const router: Router = express.Router();
 
 router.get("/", travellerController.getAllTraveller);
+router.get("/sos/all", travellerController.getAllSOS);
 router.get("/sos/supporter/:supporter_id", travellerController.getSOSBySupporterId);
 router.get("/:user_id", travellerController.getTravellerById);
 router.get("/:user_id/diaries", travellerController.getListDiaries);

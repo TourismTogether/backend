@@ -181,6 +181,15 @@ const travellerService = {
             message: "Successfully",
             data: sosTravellers,
         };
+    },
+
+    async findAllSOS(): Promise<APIResponse<Array<ITraveller & { user_full_name?: string; user_phone?: string; user_avatar_url?: string }>>> {
+        const sosTravellers = await travellerModel.findAllSOS();
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: sosTravellers,
+        };
     }
 };
 
