@@ -8,7 +8,8 @@ interface Config {
     databaseUser: string,
     databasePassword: string,
     databaseName: string,
-    databaseSSL: boolean
+    databaseSSL: boolean,
+    openAiApiKey: string
 }
 
 const config: Config = {
@@ -19,7 +20,8 @@ const config: Config = {
     databaseUser: process.env.DATABASE_USER || "",
     databasePassword: process.env.DATABASE_PASSWORD || "",
     databaseName: process.env.DATABASE_NAME || "postgre",
-    databaseSSL: process.env.DATABASE_SSL === "true" || process.env.NODE_ENV === "production"
+    databaseSSL: process.env.DATABASE_SSL === "true" || process.env.NODE_ENV === "production",
+    openAiApiKey: process.env.OPENROUTER_API_KEY || ""
 }
 
 export default config;
