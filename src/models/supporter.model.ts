@@ -61,6 +61,22 @@ class SupporterModel {
         );
         return result.rowCount !== null && result.rowCount > 0;
     }
+
+    async findAllWithUserInfo(): Promise<Array<ISupporter & { user_full_name?: string; user_phone?: string; user_avatar_url?: string }>> {
+        const query = `
+            SELECT 
+                s.*,
+                u.full_name as user_full_name,
+                u.phone as user_phone,
+                u.avatar_url as user_avatar_url
+            FROM supporters s
+            LEFT JOIN users u ON u.id = s.user_id
+            WHERE s.is_available = true
+            ORDER BY u.full_name ASC
+        `;
+        const result = await db.query(query);
+        return result.rows;
+    }
 }
 
 export const supporterModel = new SupporterModel();

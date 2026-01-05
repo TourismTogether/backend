@@ -56,6 +56,16 @@ class SupporterController {
             next(err);
         }
     }
+
+    // GET - /supporters/with-user-info
+    async getAllSupportersWithUserInfo(req: Request, res: Response, next: NextFunction) {
+        try {
+            const result = await supporterService.findAllWithUserInfo();
+            return res.status(result.status).json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export default new SupporterController();

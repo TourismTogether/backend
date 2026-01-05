@@ -127,6 +127,15 @@ const supporterService = {
             status: STATUS.OK,
             message: "Supporter deleted"
         };
+    },
+
+    async findAllWithUserInfo(): Promise<APIResponse<Array<ISupporter & { user_full_name?: string; user_phone?: string; user_avatar_url?: string }>>> {
+        const data = await supporterModel.findAllWithUserInfo();
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data
+        };
     }
 };
 

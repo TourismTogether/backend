@@ -4,6 +4,7 @@ import supporterController from "../controllers/supporter.controller";
 const router: Router = express.Router();
 
 router.get("/", supporterController.getAllSupporters);
+router.get("/with-user-info", supporterController.getAllSupportersWithUserInfo);
 router.get("/:user_id", supporterController.getSupporterById);
 router.post("/", supporterController.createSupporter);
 router.patch("/:user_id", supporterController.updateSupporterById);
