@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import postReplyService from "../services/post-reply.service";
 
 class PostReplyController {
     // GET - /post-replies/:id
     async getPostRepliesById(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params
+            const { id } = req.params;
             const result = await postReplyService.getById(id);
             return res.status(result.status).json(result);
         } catch (err) {

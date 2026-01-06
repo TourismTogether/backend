@@ -58,12 +58,13 @@ class PostReplyModel {
         return result.rows[0];
     }
 
-    async delete(id: string) {
+    async delete(id: string, post_id: string) {
         const sql = `
             DELETE FROM post_reply
             WHERE id = $1
         `;
         await db.query(sql, [id]);
+        await db.query(`UPDATE posts SET reply_count = reply_count - 1 WHERE id = $1`, [post_id]);
         return true;
     }
 }
