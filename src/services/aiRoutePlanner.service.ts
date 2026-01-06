@@ -227,6 +227,73 @@ const aiRoutePlannerService = {
     const data = await res.json();
 
     return JSON.parse(data.choices?.[0]?.message?.content);
+  },
+
+  async generateForum({ topic }: { topic: string }) {
+    const prompt = `
+    Bạn là một người dùng forum du lịch có kinh nghiệm.
+
+    Nhiệm vụ:
+    Tạo nội dung cho một bài thảo luận du lịch để đăng lên forum.
+
+    Thông tin đầu vào:
+    - Chủ đề chính: ${topic}
+
+    Yêu cầu nội dung:
+    - Viết bằng tiếng Việt
+    - Văn phong tự nhiên, giống người thật
+    - Phù hợp với forum (không như bài blog dài)
+    - Không dùng emoji
+    - Không quảng cáo
+    - Nội dung rõ ràng, dễ thảo luận
+
+    Yêu cầu từng trường:
+    - title: ngắn gọn, thu hút, phù hợp forum
+    - category: chọn 1 trong các giá trị sau:
+      Destination | Tips | Itinerary | Review | Question
+    - content:
+      - 1–3 đoạn ngắn
+      - Không xuống dòng quá nhiều
+      - Mang tính chia sẻ hoặc đặt vấn đề thảo luận
+    - tags:
+      - 3–5 tag
+      - Viết thường, không dấu #
+      - Liên quan trực tiếp đến chủ đề
+      - Cách nhau bởi dấu ","
+
+    ĐỊNH DẠNG TRẢ VỀ:
+    CHỈ TRẢ VỀ 1 JSON OBJECT HỢP LỆ
+    KHÔNG markdown
+    KHÔNG giải thích
+    KHÔNG text bên ngoài
+
+    Schema JSON bắt buộc:
+    {
+      "title": "string",
+      "category": "Destination | Tips | Itinerary | Review | Question",
+      "content": "string",
+      "tags": "string"
+    }
+    `;
+
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${config.openAiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "qwen/qwen-2.5-7b-instruct",
+        messages: [
+          { role: "system", content: "Bạn là trợ lý viết bài." },
+          { role: "user", content: prompt }
+        ],
+      }),
+    });
+
+    const data = await res.json();
+
+    return JSON.parse(data.choices?.[0]?.message?.content);
   }
 };
 

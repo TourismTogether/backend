@@ -36,6 +36,24 @@ class AIRoutePlannerController {
       next(err);
     }
   }
+
+  async generateForum(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { topic } = req.body;
+
+      if (!topic) {
+        return res.status(400).json({ error: "Missing topic" });
+      }
+
+      const result = await aiRoutePlannerService.generateForum({
+        topic
+      });
+
+      res.json({ result });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export default new AIRoutePlannerController();
