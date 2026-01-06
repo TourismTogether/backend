@@ -4,6 +4,8 @@
 import { APIResponse, STATUS } from "../types/response";
 import { IRoute } from "../models/route.model";
 import { IDestination } from "../models/destination.model";
+import OpenAI from "openai";
+import config from "../configs/config";
 
 interface AIGenerationRequest {
   destination: {
@@ -38,7 +40,7 @@ interface AIGeneratedRoute {
  */
 function generateLocalItinerary(request: AIGenerationRequest): AIGeneratedRoute[] {
   const { destination, startDate, endDate } = request;
-  
+
   // Calculate number of days
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -145,6 +147,154 @@ const aiRoutePlannerService = {
       };
     }
   },
+
+
+  async generateDiary({ topic, goal, audience }: { topic: string, goal: string, audience: string }) {
+    const prompt = `
+    Bạn là một travel diary writer chuyên nghiệp.
+
+    Nhiệm vụ:
+    - Gợi ý tiêu đề bài diary du lịch
+    - Gợi ý mô tả ngắn
+    - Tạo các Info Cards (thẻ thông tin)
+    - Gợi ý các section nội dung cho bài diary
+
+    Thông tin đầu vào:
+    - Chủ đề: ${topic}
+    - Đối tượng người đọc: ${audience}
+    - Mục đích bài viết: ${goal}
+
+    
+    Yêu cầu chung:
+    - Viết bằng tiếng Việt
+    - Văn phong kể chuyện, cảm xúc, nhẹ nhàng
+    - Ngắn gọn
+    - Không dùng emoji
+    - KHÔNG xuống dòng trong content
+    - KHÔNG dùng dấu ngoặc kép (")
+    - KHÔNG thêm bất kỳ text nào ngoài JSON
+
+    Yêu cầu Info Cards:
+    - Tạo từ 3 đến 4 card
+    - Mỗi card gồm:
+      - title: ngắn gọn
+      - content: 1 câu ngắn, rõ ràng
+    - Phù hợp để hiển thị dạng thẻ thông tin
+
+    Yêu cầu Content Sections:
+    - Tạo từ 3 đến 5 section
+    - Mỗi section gồm:
+      - title: ngắn gọn
+      - content: 1 đoạn ngắn, mang tính kể chuyện
+
+    Định dạng trả về:
+    TRẢ VỀ DUY NHẤT 1 JSON OBJECT, KHÔNG bọc markdown, KHÔNG giải thích.
+
+    Schema JSON BẮT BUỘC:
+    {
+      "title": "string",
+      "shortDes": "string",
+      "metadata": [
+        {
+          "title": "string",
+          "content": "string"
+        }
+      ],
+      "content_sections": [
+        {
+          "title": "string",
+          "content": "string"
+        }
+      ]
+    }
+    `;
+
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${config.openAiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "qwen/qwen-2.5-7b-instruct",
+        messages: [
+          { role: "system", content: "Bạn là trợ lý viết bài." },
+          { role: "user", content: prompt }
+        ],
+      }),
+    });
+
+    const data = await res.json();
+
+    return JSON.parse(data.choices?.[0]?.message?.content);
+  },
+
+  async generateForum({ topic }: { topic: string }) {
+    const prompt = `
+    Bạn là một người dùng forum du lịch có kinh nghiệm.
+
+    Nhiệm vụ:
+    Tạo nội dung cho một bài thảo luận du lịch để đăng lên forum.
+
+    Thông tin đầu vào:
+    - Chủ đề chính: ${topic}
+
+    Yêu cầu nội dung:
+    - Viết bằng tiếng Việt
+    - Văn phong tự nhiên, giống người thật
+    - Phù hợp với forum (không như bài blog dài)
+    - Không dùng emoji
+    - Không quảng cáo
+    - Nội dung rõ ràng, dễ thảo luận
+
+    Yêu cầu từng trường:
+    - title: ngắn gọn, thu hút, phù hợp forum
+    - category: chọn 1 trong các giá trị sau:
+      Destination | Tips | Itinerary | Review | Question
+    - content:
+      - 1–3 đoạn ngắn
+      - Không xuống dòng quá nhiều
+      - Mang tính chia sẻ hoặc đặt vấn đề thảo luận
+    - tags:
+      - 3–5 tag
+      - Viết thường, không dấu #
+      - Liên quan trực tiếp đến chủ đề
+      - Cách nhau bởi dấu ","
+
+    ĐỊNH DẠNG TRẢ VỀ:
+    CHỈ TRẢ VỀ 1 JSON OBJECT HỢP LỆ
+    KHÔNG markdown
+    KHÔNG giải thích
+    KHÔNG text bên ngoài
+
+    Schema JSON bắt buộc:
+    {
+      "title": "string",
+      "category": "Destination | Tips | Itinerary | Review | Question",
+      "content": "string",
+      "tags": "string"
+    }
+    `;
+
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${config.openAiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "qwen/qwen-2.5-7b-instruct",
+        messages: [
+          { role: "system", content: "Bạn là trợ lý viết bài." },
+          { role: "user", content: prompt }
+        ],
+      }),
+    });
+
+    const data = await res.json();
+
+    return JSON.parse(data.choices?.[0]?.message?.content);
+  }
 };
 
 export default aiRoutePlannerService;
