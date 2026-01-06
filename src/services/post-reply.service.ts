@@ -1,23 +1,24 @@
-import { APIResponse, STATUS } from "../types/response";
-import { postReplyModel, IPostReply } from "../models/post-reply.model";
+import { IPostReply, postReplyModel } from "../models/post-reply.model";
 import { postModel } from "../models/post.model";
 import { travellerModel } from "../models/traveller.model";
-import { error } from "console";
+import { APIResponse, STATUS } from "../types/response";
 
 const postReplyService = {
-    async getByPostId(post_id: string | undefined): Promise<APIResponse<IPostReply[]>> {
+    async getByPostId(
+        post_id: string | undefined
+    ): Promise<APIResponse<IPostReply[]>> {
         if (!post_id) {
             return {
                 status: STATUS.BAD_REQUEST,
                 message: "post_id is require",
-                error: true
-            }
+                error: true,
+            };
         }
         const replies = await postReplyModel.findByPostId(post_id);
         return {
             status: STATUS.OK,
             message: "Successfully",
-            data: replies
+            data: replies,
         };
     },
 
@@ -26,21 +27,21 @@ const postReplyService = {
             return {
                 status: STATUS.BAD_REQUEST,
                 message: "id is require",
-                error: true
-            }
+                error: true,
+            };
         }
         const reply = await postReplyModel.findById(id);
         if (!reply) {
             return {
                 status: STATUS.NOT_FOUND,
                 message: "Reply not found",
-                error: true
+                error: true,
             };
         }
         return {
             status: STATUS.OK,
             message: "Sucessfully",
-            data: reply
+            data: reply,
         };
     },
 
@@ -49,21 +50,21 @@ const postReplyService = {
             return {
                 status: STATUS.BAD_REQUEST,
                 message: "Content required",
-                error: true
+                error: true,
             };
         }
         if (!reply.post_id) {
             return {
                 status: STATUS.BAD_REQUEST,
                 message: "post_id is required",
-                error: true
+                error: true,
             };
         }
         if (!reply.user_id) {
             return {
                 status: STATUS.BAD_REQUEST,
                 message: "user_id is required",
-                error: true
+                error: true,
             };
         }
         const post = await postModel.findById(reply.post_id);
@@ -71,23 +72,23 @@ const postReplyService = {
             return {
                 status: STATUS.NOT_FOUND,
                 message: "post_id is not found",
-                error: true
-            }
+                error: true,
+            };
         }
         const user = await travellerModel.findById(reply.user_id);
         if (!user) {
             return {
                 status: STATUS.NOT_FOUND,
                 message: "user_id is not found",
-                error: true
-            }
+                error: true,
+            };
         }
 
         const created = await postReplyModel.create(reply);
         return {
             status: STATUS.CREATED,
             message: "Reply created",
-            data: created
+            data: created,
         };
     },
 
@@ -96,15 +97,15 @@ const postReplyService = {
             return {
                 status: STATUS.BAD_REQUEST,
                 message: "id is require",
-                error: true
-            }
+                error: true,
+            };
         }
         const exist = await postReplyModel.findById(id);
         if (!exist) {
             return {
                 status: STATUS.NOT_FOUND,
                 message: "Reply not found",
-                error: true
+                error: true,
             };
         }
         payload.updated_at = new Date(Date.now());
@@ -112,7 +113,7 @@ const postReplyService = {
         return {
             status: STATUS.OK,
             message: "Reply updated",
-            data: updated
+            data: updated,
         };
     },
 
@@ -120,24 +121,28 @@ const postReplyService = {
         if (!id) {
             return {
                 status: STATUS.BAD_REQUEST,
-                message: "id is require",
-                error: true
-            }
+                message: "id is required",
+                error: true,
+            };
         }
+
         const exist = await postReplyModel.findById(id);
         if (!exist) {
             return {
                 status: STATUS.NOT_FOUND,
                 message: "Reply not found",
-                error: true
+                error: true,
             };
         }
-        await postReplyModel.delete(id);
+        const postIdFromDb = exist.post_id;
+
+        await postReplyModel.delete(id, postIdFromDb);
+
         return {
             status: STATUS.OK,
-            message: "Reply deleted"
+            message: "Reply deleted",
         };
-    }
+    },
 };
 
 export default postReplyService;
