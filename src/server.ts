@@ -80,7 +80,7 @@ app.use(
       httpOnly: true,
       secure: process.env.NODE_ENV == "Development" ? false : true,
       sameSite: process.env.NODE_ENV == "Development" ? "lax" : "none",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day 
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     },
   })
 );
@@ -110,6 +110,20 @@ route(app);
 app.use(errorHandler);
 app.use(notFoundHandler);
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
+app
+  .listen(port, () => {
+    console.log(`App listening on port ${port}`);
+  })
+  .on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`\n❌ ERROR: Port ${port} is already in use!\n`);
+      console.error("Giải pháp:");
+      console.error(
+        `  1. Tắt process đang dùng port: netstat -ano | findstr :${port}`
+      );
+      console.error(`  2. Hoặc đổi port trong file .env: PORT=8081\n`);
+    } else {
+      console.error("Error starting server:", err);
+    }
+    process.exit(1);
+  });

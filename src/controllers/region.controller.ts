@@ -27,6 +27,13 @@ class RegionController {
     async updateRegionById(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Region ID is required",
+                    error: true,
+                });
+            }
             const region = req.body;
             const result = await regionService.updateById(id, region);
             return res.status(result.status).json(result);
@@ -39,6 +46,13 @@ class RegionController {
     async deleteRegionById(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Region ID is required",
+                    error: true,
+                });
+            }
             const result = await regionService.deleteById(id);
             return res.status(result.status).json(result);
         } catch (err: any) {

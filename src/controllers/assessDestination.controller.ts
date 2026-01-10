@@ -4,11 +4,27 @@ import assessDestinationService from "../services/assessDestination.service";
 class AssessDestinationController {
   async getByDestination(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await assessDestinationService.getByDestination(
-        req.params.destinationId
-      );
+      const { destinationId } = req.params;
+      if (!destinationId || destinationId === "NaN" || destinationId === "undefined" || destinationId.trim() === "") {
+        return res.status(400).json({
+          status: 400,
+          message: "Destination ID is required and must be a valid UUID",
+          error: true,
+        });
+      }
+      // Validate UUID format (basic check)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(destinationId)) {
+        return res.status(400).json({
+          status: 400,
+          message: "Invalid Destination ID format. Expected UUID.",
+          error: true,
+        });
+      }
+      const result = await assessDestinationService.getByDestination(destinationId);
       res.status(result.status).json(result);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error("Error in getByDestination:", err);
       next(err);
     }
   }

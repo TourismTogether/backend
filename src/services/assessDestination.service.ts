@@ -8,10 +8,19 @@ const assessDestinationService = {
   async getByDestination(
     destinationId: string | undefined
   ): Promise<APIResponse<IAssessDestination[]>> {
-    if (!destinationId) {
+    if (!destinationId || destinationId === "NaN" || destinationId === "undefined" || destinationId.trim() === "") {
       return {
         status: STATUS.BAD_REQUEST,
-        message: "destination_id is undefined",
+        message: "Destination ID is required and must be a valid UUID",
+        error: true,
+      };
+    }
+    // Validate UUID format (basic check)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(destinationId)) {
+      return {
+        status: STATUS.BAD_REQUEST,
+        message: "Invalid Destination ID format. Expected UUID.",
         error: true,
       };
     }
