@@ -21,10 +21,19 @@ const travellerService = {
     },
 
     async findById(id: string | undefined): Promise<APIResponse<ITraveller>> {
-        if (!id) {
+        if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
             return {
                 status: STATUS.BAD_REQUEST,
-                message: "id is undefined",
+                message: "User ID is required and must be a valid UUID",
+                error: true,
+            };
+        }
+        // Validate UUID format (basic check)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(id)) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "Invalid User ID format. Expected UUID.",
                 error: true,
             };
         }
