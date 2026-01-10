@@ -30,16 +30,25 @@ class PostController {
     async getListPostReplies(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            if (!id) {
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
                 return res.status(400).json({
                     status: 400,
-                    message: "Post ID is required",
+                    message: "Post ID is required and must be a valid UUID",
+                    error: true,
+                });
+            }
+            // Validate UUID format (basic check)
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Invalid Post ID format. Expected UUID.",
                     error: true,
                 });
             }
             const result = await postReplyService.getByPostId(id);
             return res.status(result.status).json(result);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error in getListPostReplies:", err);
             next(err);
         }
