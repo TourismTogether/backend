@@ -17,6 +17,22 @@ class UserController {
     async getUserById(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+                return res.status(400).json({
+                    status: 400,
+                    message: "User ID is required and must be a valid UUID",
+                    error: true,
+                });
+            }
+            // Validate UUID format (basic check)
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Invalid User ID format. Expected UUID.",
+                    error: true,
+                });
+            }
             const result = await userSevice.findById(id);
             return res.status(result.status).json(result);
         } catch (err) {
@@ -67,6 +83,22 @@ class UserController {
     async updateUserById(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+                return res.status(400).json({
+                    status: 400,
+                    message: "User ID is required and must be a valid UUID",
+                    error: true,
+                });
+            }
+            // Validate UUID format (basic check)
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Invalid User ID format. Expected UUID.",
+                    error: true,
+                });
+            }
             const user = req.body;
             const result = await userSevice.updateById(id, user);
             return res.status(result.status).json(result);
@@ -79,6 +111,22 @@ class UserController {
     async deleteUserById(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+                return res.status(400).json({
+                    status: 400,
+                    message: "User ID is required and must be a valid UUID",
+                    error: true,
+                });
+            }
+            // Validate UUID format (basic check)
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Invalid User ID format. Expected UUID.",
+                    error: true,
+                });
+            }
             const result = await userSevice.deleteById(id);
             return res.status(result.status).json(result);
         } catch (err) {
