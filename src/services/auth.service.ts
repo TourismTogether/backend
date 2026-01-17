@@ -3,8 +3,6 @@ import bcrypt from "bcrypt";
 import { APIResponse, STATUS } from "../types/response";
 import { accountModel, IAccount } from "../models/account.model";
 import { IUser, userModel } from "../models/user.model";
-import { error } from "console";
-import { IUserResponse } from "../dto/userResponse";
 import { ITraveller } from "../models/traveller.model";
 import travellerService from "./traveller.service";
 
@@ -86,7 +84,7 @@ const authService = {
         if (!emailAccount || !emailAccount.id || !emailAccount.password) {
             return {
                 status: STATUS.NOT_FOUND,
-                message: "email is not found",
+                message: "Email or password is incorrect",
                 error: true
             }
         }
@@ -102,7 +100,7 @@ const authService = {
         if (!bcrypt.compareSync(account.password, emailAccount.password)) {
             return {
                 status: STATUS.NOT_FOUND,
-                message: "password is wrong",
+                message: "Email or password is incorrect",
                 error: true
             }
         }
