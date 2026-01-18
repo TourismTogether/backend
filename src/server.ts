@@ -4,10 +4,7 @@ import route from "./routes/index";
 import { initDB } from "./configs/db";
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
 import cors from "cors";
-import session from "express-session";
-import passport from "./configs/passport";
-import pgSession from "connect-pg-simple";
-import { db } from "./configs/db";
+import cookieParser from "cookie-parser";
 
 const app: Express = express();
 const port = config.port;
@@ -61,33 +58,10 @@ app.use(
   })
 );
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PgSession = pgSession(session);
-
-app.use(
-  session({
-    name: "sid",
-    store: new PgSession({
-      pool: db,
-      tableName: "session",
-    }),
-    secret: process.env.SESSION_SECRET || "keyboard cat",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV == "Development" ? false : true,
-      sameSite: process.env.NODE_ENV == "Development" ? "lax" : "none",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    },
-  })
-);
-
-// Initialize passport AFTER session middleware so it can use the session store
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Initialize DB connection (non-blocking for serverless)
 // In serverless, connections are created lazily on first use

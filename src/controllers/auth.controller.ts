@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { IUser } from "../models/user.model";
 import authService from "../services/auth.service";
-import { accountModel, IAccount } from "../models/account.model";
-import { ISession } from "../types/session";
 import { STATUS } from "../types/response";
-import passport from "../configs/passport";
+import { base64url } from "../utils/jwt";
+import crypto from "crypto";
+import config from "../configs/config";
+import userSevice from "../services/user.service";
+import accountService from "../services/account.service";
 
 class AuthController {
     // POST - /auth/signup
@@ -19,11 +20,40 @@ class AuthController {
                 phone: phone || ""
             };
             const result = await authService.signUp(account, user);
-            if (result.status == STATUS.OK && result.data) {
-                (req.session as ISession).isAuthenticated = true;
-                (req.session as ISession).user = result.data.user;
+            if (result.status != STATUS.OK) {
+                return res.status(result.status).json(result);
             }
-            res.status(result.status).json(result);
+
+            const header = {
+                alg: "HS256",
+                typ: "JWT"
+            }
+
+            const payload = {
+                userId: result.data?.user.id,
+                expireAt: Date.now() + (3600 * 1000) // 1h
+            }
+
+            const encodedHeader = base64url(JSON.stringify(header));
+            const encodedPayload = base64url(JSON.stringify(payload));
+
+            const tokenData = `${encodedHeader}.${encodedPayload}`;
+
+            const hmac = crypto.createHmac("sha256", config.secretKey);
+            const signature = hmac.update(tokenData).digest("base64url");
+
+            const token = `${tokenData}.${signature}`;
+
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: config.nodeEnv == "Development" ? false : true,
+                sameSite: config.nodeEnv == "Development" ? "lax" : "none",
+                maxAge: 3600 * 1000
+            });
+
+            res.json({
+                status: 200
+            });
         } catch (err) {
             next(err);
         }
@@ -31,63 +61,93 @@ class AuthController {
 
     // POST - /auth/signin
     async signIn(req: Request, res: Response, next: NextFunction) {
-        passport.authenticate(
-            "local",
-            (err: any, user: any, info?: { message?: string }) => {
-                if (err) {
-                    return next(err);
-                }
-
-                if (!user) {
-                    return res.status(401).json({
-                        status: 401,
-                        message: info?.message || "Login failed",
-                    });
-                }
-
-                req.logIn(user, (err) => {
-                    if (err) {
-                        return next(err);
-                    }
-
-                    return res.status(200).json({
-                        status: 200,
-                        message: "Login success",
-                        data: user,
-                    });
-                });
+        try {
+            const { email, password, username } = req.body;
+            const result = await authService.signIn({ email, password, username });
+            if (result.status != STATUS.OK) {
+                return res.status(result.status).json(result);
             }
-        )(req, res, next);
+
+            const header = {
+                alg: "HS256",
+                typ: "JWT"
+            }
+
+            const payload = {
+                userId: result.data?.user.id,
+                expireAt: Date.now() + (3600 * 1000) // 1h
+            }
+
+            const encodedHeader = base64url(JSON.stringify(header));
+            const encodedPayload = base64url(JSON.stringify(payload));
+
+            const tokenData = `${encodedHeader}.${encodedPayload}`;
+
+            const hmac = crypto.createHmac("sha256", config.secretKey);
+            const signature = hmac.update(tokenData).digest("base64url");
+
+            const token = `${tokenData}.${signature}`;
+
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: config.nodeEnv == "Development" ? false : true,
+                sameSite: config.nodeEnv == "Development" ? "lax" : "none",
+                maxAge: 3600 * 1000
+            });
+
+            res.json({
+                status: 200
+            });
+        } catch (err) {
+            next(err);
+        }
     }
 
     // GET - /auth/user
     async getCurUser(req: Request, res: Response, next: NextFunction) {
         try {
-            if (!req.isAuthenticated()) {
-                return res.status(STATUS.OK).json({
-                    status: STATUS.OK,
-                    message: "Not authenticated",
-                    data: {
-                        isAuthenticated: false,
-                    },
+            const token = req.cookies.token;
+
+            const [encodedHeader, encodedPayload, tokenSignature] = token.split(".");
+            const tokenData = `${encodedHeader}.${encodedPayload}`;
+            const hmac = crypto.createHmac("sha256", config.secretKey);
+            const signature = hmac.update(tokenData).digest("base64url");
+
+            if (signature != tokenSignature) {
+                return res.status(STATUS.UNAUTHORIZED).json({
+                    status: STATUS.UNAUTHORIZED,
+                    message: "Unauthorized"
                 });
             }
 
-            const user = req.user as { account_id?: string };
 
-            let account: IAccount | undefined;
-            if (user?.account_id) {
-                account = await accountModel.findById(user.account_id);
+            const payload = JSON.parse(atob(encodedPayload));
+            const { data: user }: any = await userSevice.findById(payload.userId);
+
+            if (!user) {
+                return res.status(STATUS.UNAUTHORIZED).json({
+                    status: STATUS.UNAUTHORIZED,
+                    message: "Unauthorized"
+                });
             }
 
-            return res.status(STATUS.OK).json({
+            const { data: account }: any = await accountService.findById(user.account_id);
+
+            if (!account) {
+                return res.status(STATUS.UNAUTHORIZED).json({
+                    status: STATUS.UNAUTHORIZED,
+                    message: "Unauthorized"
+                });
+            }
+
+            res.status(STATUS.OK).json({
                 status: STATUS.OK,
                 message: "Successfully",
                 data: {
                     isAuthenticated: true,
                     user,
-                    account,
-                },
+                    account
+                }
             });
         } catch (err) {
             next(err);
@@ -97,13 +157,15 @@ class AuthController {
     // POST - /auth/logout
     async logOut(req: Request, res: Response, next: NextFunction) {
         try {
-            req.logout(function (err) {
-                if (err) { return next(err); }
-                return res.status(200).json({
-                    status: STATUS.OK,
-                    message: "Successfully"
-                })
+            res.clearCookie("token", {
+                httpOnly: true,
+                secure: config.nodeEnv == "Development" ? false : true,
+                sameSite: config.nodeEnv == "Development" ? "lax" : "none",
             });
+            return res.status(200).json({
+                status: STATUS.OK,
+                message: "Successfully"
+            })
         } catch (err) {
             next(err);
         }
