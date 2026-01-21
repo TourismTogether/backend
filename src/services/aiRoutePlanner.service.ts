@@ -4,7 +4,6 @@
 import { APIResponse, STATUS } from "../types/response";
 import { IRoute } from "../models/route.model";
 import { IDestination } from "../models/destination.model";
-import OpenAI from "openai";
 import config from "../configs/config";
 
 interface AIGenerationRequest {
