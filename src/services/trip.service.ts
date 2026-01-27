@@ -278,6 +278,87 @@ const tripService = {
     };
   },
 
+  async joinTrip(
+    trip_id: string | undefined,
+    user_id: string | undefined,
+    password: string | undefined
+  ): Promise<APIResponse<IJoinTrip>> {
+    if (!trip_id || !user_id) {
+      return {
+        status: STATUS.BAD_REQUEST,
+        message: "trip_id and user_id is required",
+        error: true,
+      };
+    }
+
+    const trip = await tripModel.findById(trip_id);
+    if (!trip) {
+      return {
+        status: STATUS.NOT_FOUND,
+        message: "Trip không tồn tại",
+        error: true,
+      };
+    }
+
+    // Check if trip has password and validate it
+    if (trip.password) {
+      if (!password) {
+        return {
+          status: STATUS.BAD_REQUEST,
+          message: "Mật khẩu là bắt buộc để tham gia chuyến đi này",
+          error: true,
+        };
+      }
+      // Simple password comparison (in production, use bcrypt)
+      if (trip.password !== password) {
+        return {
+          status: STATUS.UNAUTHORIZED,
+          message: "Mật khẩu không đúng",
+          error: true,
+        };
+      }
+    }
+
+    const user = await userModel.findById(user_id);
+    if (!user) {
+      return {
+        status: STATUS.NOT_FOUND,
+        message: "User không tồn tại",
+        error: true,
+      };
+    }
+
+    // Check if user is already a member
+    const tripMember = await joinTripModel.find(user_id, trip_id);
+    if (tripMember) {
+      return {
+        status: STATUS.CONFLICT,
+        message: "Bạn đã tham gia chuyến đi này rồi",
+        error: true,
+      };
+    }
+
+    const joinTrip: IJoinTrip = {
+      trip_id,
+      user_id,
+      created_at: new Date(Date.now()),
+    };
+    const newJoinTrip = await joinTripModel.create(joinTrip);
+    if (!newJoinTrip) {
+      return {
+        status: STATUS.INTERNAL_SERVER_ERROR,
+        message: "Không thể tham gia chuyến đi",
+        error: true,
+      };
+    }
+
+    return {
+      status: STATUS.OK,
+      message: "Tham gia chuyến đi thành công",
+      data: newJoinTrip,
+    };
+  },
+
   async deleteTripMember(
     trip_id: string | undefined,
     user_id: string | undefined

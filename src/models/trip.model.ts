@@ -17,6 +17,7 @@ export interface ITrip {
   total_budget: number;
   spent_amount: number;
   status: string;
+  password?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -50,8 +51,8 @@ class TripModel {
     const query = `
                     INSERT INTO trips (
                         destination_id, title, description, departure, distance, start_date, end_date, difficult,
-                        total_budget, spent_amount, status, created_at, updated_at)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                        total_budget, spent_amount, status, password, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
                     RETURNING *;
                 `;
 
@@ -67,6 +68,7 @@ class TripModel {
       trip.total_budget,
       trip.spent_amount,
       trip.status,
+      trip.password || null,
       trip.created_at,
       trip.updated_at,
     ];

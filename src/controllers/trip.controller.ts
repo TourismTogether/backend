@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import tripService from "../services/trip.service";
+import crypto from "crypto";
+import config from "../configs/config";
+import userService from "../services/user.service";
 
 class TripController {
   // GET - /trips
@@ -125,6 +128,61 @@ class TripController {
       const { trip_id, user_id } = req.params;
       const result = await tripService.deleteTripMember(trip_id, user_id);
       res.status(result.status).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // POST - /trips/:id/join
+  async joinTrip(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { password } = req.body;
+
+      // Get user from token
+      const token = req.cookies.token;
+      if (!token) {
+        return res.status(401).json({
+          status: 401,
+          message: "Unauthorized - Please login first",
+          error: true,
+        });
+      }
+
+      try {
+        const [encodedHeader, encodedPayload, tokenSignature] = token.split(".");
+        const tokenData = `${encodedHeader}.${encodedPayload}`;
+        const hmac = crypto.createHmac("sha256", config.secretKey);
+        const signature = hmac.update(tokenData).digest("base64url");
+
+        if (signature !== tokenSignature) {
+          return res.status(401).json({
+            status: 401,
+            message: "Unauthorized - Invalid token",
+            error: true,
+          });
+        }
+
+        const payload = JSON.parse(atob(encodedPayload));
+        const userId = payload.userId;
+
+        if (!userId) {
+          return res.status(401).json({
+            status: 401,
+            message: "Unauthorized - Invalid token payload",
+            error: true,
+          });
+        }
+
+        const result = await tripService.joinTrip(id, userId, password);
+        res.status(result.status).json(result);
+      } catch (tokenError) {
+        return res.status(401).json({
+          status: 401,
+          message: "Unauthorized - Invalid token format",
+          error: true,
+        });
+      }
     } catch (err) {
       next(err);
     }
