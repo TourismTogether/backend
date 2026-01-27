@@ -9,6 +9,7 @@ router.get("/:id/users", tripController.getTripMembers);
 router.get("/:id/routes", tripController.getListRoutes);
 router.get("/:id/diaries", tripController.getListDiaries);
 router.post("/", tripController.createTrip);
+router.post("/:id/join", tripController.joinTrip);
 router.post("/:trip_id/users/:user_id", tripController.addTripMember);
 router.patch("/:id", tripController.updateTripById);
 router.delete("/:id", tripController.deleteTripById);
