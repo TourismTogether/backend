@@ -11,7 +11,6 @@ import postRouter from "./post.route";
 import diaryRouter from "./diary.route";
 import travellerRouter from "./traveller.route";
 import supporterRouter from "./supporter.route";
-import adminRouter from "./admin.route";
 import postReplyRouter from "./post-reply.route";
 import assessDestinationRouter from "./assessDestination.route";
 import aiRouter from "./ai.route";
@@ -29,7 +28,6 @@ function route(app: Express) {
   app.use("/diaries", diaryRouter);
   app.use("/travellers", travellerRouter);
   app.use("/supporters", supporterRouter);
-  app.use("/admins", adminRouter);
   app.use("/post-replies", postReplyRouter);
   app.use("/api/assess-destination", assessDestinationRouter);
   app.use("/ai", aiRouter);
