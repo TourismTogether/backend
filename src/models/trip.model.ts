@@ -48,11 +48,12 @@ class TripModel {
   }
 
   async createOne(trip: ITrip): Promise<ITrip | undefined> {
+    // Note: password column is not in database, so it's excluded from INSERT
     const query = `
                     INSERT INTO trips (
                         destination_id, title, description, departure, distance, start_date, end_date, difficult,
-                        total_budget, spent_amount, status, password, created_at, updated_at)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                        total_budget, spent_amount, status, created_at, updated_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                     RETURNING *;
                 `;
 
@@ -68,7 +69,6 @@ class TripModel {
       trip.total_budget,
       trip.spent_amount,
       trip.status,
-      trip.password || null,
       trip.created_at,
       trip.updated_at,
     ];
@@ -78,7 +78,7 @@ class TripModel {
   }
 
   async updateById(id: string, trip: ITrip): Promise<ITrip | undefined> {
-    const { id: tripId, ...fieldsToUpdate } = trip;
+    const { id: tripId, password, ...fieldsToUpdate } = trip; // Exclude password since it doesn't exist in DB
     const keys = Object.keys(fieldsToUpdate);
     if (keys.length === 0) return undefined;
 

@@ -115,6 +115,27 @@ class TripController {
   async deleteTripById(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
+      
+      // Validate trip ID
+      if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+        return res.status(400).json({
+          status: 400,
+          message: "Trip ID is required and must be a valid UUID",
+          error: true,
+        });
+      }
+      
+      // Validate UUID format (basic check)
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(id)) {
+        return res.status(400).json({
+          status: 400,
+          message: "Invalid Trip ID format. Expected UUID.",
+          error: true,
+        });
+      }
+      
       const result = await tripService.deleteById(id);
       res.status(result.status).json(result);
     } catch (err) {
@@ -126,6 +147,43 @@ class TripController {
   async deleteTripMember(req: Request, res: Response, next: NextFunction) {
     try {
       const { trip_id, user_id } = req.params;
+      
+      // Validate trip_id and user_id
+      if (!trip_id || trip_id === "NaN" || trip_id === "undefined" || trip_id.trim() === "") {
+        return res.status(400).json({
+          status: 400,
+          message: "Trip ID is required and must be a valid UUID",
+          error: true,
+        });
+      }
+      
+      if (!user_id || user_id === "NaN" || user_id === "undefined" || user_id.trim() === "") {
+        return res.status(400).json({
+          status: 400,
+          message: "User ID is required and must be a valid UUID",
+          error: true,
+        });
+      }
+      
+      // Validate UUID format
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(trip_id)) {
+        return res.status(400).json({
+          status: 400,
+          message: "Invalid Trip ID format. Expected UUID.",
+          error: true,
+        });
+      }
+      
+      if (!uuidRegex.test(user_id)) {
+        return res.status(400).json({
+          status: 400,
+          message: "Invalid User ID format. Expected UUID.",
+          error: true,
+        });
+      }
+      
       const result = await tripService.deleteTripMember(trip_id, user_id);
       res.status(result.status).json(result);
     } catch (err) {

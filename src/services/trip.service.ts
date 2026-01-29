@@ -300,24 +300,26 @@ const tripService = {
       };
     }
 
-    // Check if trip has password and validate it
-    if (trip.password) {
-      if (!password) {
-        return {
-          status: STATUS.BAD_REQUEST,
-          message: "Mật khẩu là bắt buộc để tham gia chuyến đi này",
-          error: true,
-        };
-      }
-      // Simple password comparison (in production, use bcrypt)
-      if (trip.password !== password) {
-        return {
-          status: STATUS.UNAUTHORIZED,
-          message: "Mật khẩu không đúng",
-          error: true,
-        };
-      }
-    }
+    // Note: password column is not in database, so password check is disabled
+    // If password functionality is needed in the future, add password column to database first
+    // Password check is commented out since password column doesn't exist in DB
+    // if (trip.password) {
+    //   if (!password) {
+    //     return {
+    //       status: STATUS.BAD_REQUEST,
+    //       message: "Mật khẩu là bắt buộc để tham gia chuyến đi này",
+    //       error: true,
+    //     };
+    //   }
+    //   // Simple password comparison (in production, use bcrypt)
+    //   if (trip.password !== password) {
+    //     return {
+    //       status: STATUS.UNAUTHORIZED,
+    //       message: "Mật khẩu không đúng",
+    //       error: true,
+    //     };
+    //   }
+    // }
 
     const user = await userModel.findById(user_id);
     if (!user) {
