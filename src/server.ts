@@ -3,6 +3,8 @@ import config from "./configs/config";
 import route from "./routes/index";
 import { initDB } from "./configs/db";
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
+import { setupSecurityMiddleware, generalLimiter, readLimiter } from "./middlewares/security.middleware";
+import { requestLogger, errorLogger } from "./middlewares/logger.middleware";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -58,9 +60,20 @@ app.use(
   })
 );
 
+// Setup security middleware (helmet)
+setupSecurityMiddleware(app);
+
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Request size limits
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Apply lenient rate limiting for GET requests (read operations)
+app.use(readLimiter);
+
+// Apply general rate limiting to all routes (for non-GET requests)
+app.use(generalLimiter);
 
 
 // Initialize DB connection (non-blocking for serverless)
@@ -73,14 +86,15 @@ if (!isServerless) {
   });
 }
 
-app.use(function (req, res, next) {
-  console.log(req.originalUrl);
-
-  next();
-});
+// Request logging middleware
+app.use(requestLogger);
 
 route(app);
 
+// Error logging middleware (before error handler)
+app.use(errorLogger);
+
+// Error handlers (must be last)
 app.use(errorHandler);
 app.use(notFoundHandler);
 
