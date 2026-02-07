@@ -17,7 +17,10 @@ interface Config {
 const nodeEnv = process.env.NODE_ENV || "production";
 const rawSecret = process.env.SECRET_KEY || "";
 if (nodeEnv === "production" && (!rawSecret || rawSecret.length < 32)) {
-    throw new Error("SECRET_KEY must be set and at least 32 characters in production");
+    throw new Error(
+        "SECRET_KEY must be set and at least 32 characters in production. " +
+        "On Vercel: Project → Settings → Environment Variables → add SECRET_KEY with a long random string (e.g. 32+ chars)."
+    );
 }
 
 const config: Config = {
