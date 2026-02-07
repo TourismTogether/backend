@@ -170,7 +170,16 @@ export const tripValidators = {
 export const authValidators = {
   signUp: [
     commonValidators.email("email"),
-    commonValidators.password("password", 6),
+    body("password")
+      .trim()
+      .notEmpty()
+      .withMessage("Password is required")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters")
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+      .withMessage(
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      ),
     commonValidators.username("username"),
     commonValidators.optionalString("full_name", 100),
     commonValidators.phone("phone"),

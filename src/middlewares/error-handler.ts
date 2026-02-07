@@ -156,9 +156,13 @@ export function notFoundHandler(
   res: Response,
   next: NextFunction
 ) {
+  const message =
+    process.env.NODE_ENV === "production"
+      ? "Not found"
+      : `Route ${req.method} ${req.originalUrl} not found`;
   res.status(STATUS.NOT_FOUND).json({
     status: STATUS.NOT_FOUND,
-    message: `Route ${req.method} ${req.originalUrl} not found`,
+    message,
     error: true,
     code: "ROUTE_NOT_FOUND",
   } as APIResponse<null>);

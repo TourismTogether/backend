@@ -31,7 +31,12 @@ class AssessDestinationController {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await assessDestinationService.createOne(req.body);
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+      }
+      const body = { ...req.body, traveller_id: userId };
+      const result = await assessDestinationService.createOne(body);
       res.status(result.status).json(result);
     } catch (err) {
       next(err);
@@ -40,7 +45,12 @@ class AssessDestinationController {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await assessDestinationService.updateOne(req.body);
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+      }
+      const body = { ...req.body, traveller_id: userId };
+      const result = await assessDestinationService.updateOne(body);
       res.status(result.status).json(result);
     } catch (err) {
       next(err);
@@ -49,18 +59,25 @@ class AssessDestinationController {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+      }
       const { traveller_id, destination_id, no } = req.body;
-
-      if (!traveller_id || !destination_id || no == null) {
+      const effectiveTravellerId = traveller_id || userId;
+      if (!destination_id || no == null) {
         return res.status(400).json({
           status: 400,
-          message: "Missing required fields: traveller_id, destination_id, no",
+          message: "Missing required fields: destination_id, no",
           error: true,
         });
       }
+      if (effectiveTravellerId !== userId) {
+        return res.status(403).json({ status: 403, message: "Forbidden", error: true });
+      }
 
       const result = await assessDestinationService.deleteOne(
-        traveller_id,
+        effectiveTravellerId,
         destination_id,
         no
       );

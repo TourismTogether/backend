@@ -37,7 +37,11 @@ class DiaryController {
     // POST - /diaries
     async createDiary(req: Request, res: Response, next: NextFunction) {
         try {
-            const diary = req.body;
+            const userId = req.userId;
+            if (!userId) {
+                return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+            }
+            const diary = { ...req.body, user_id: userId };
 
             const result = await diaryService.createOne(diary);
             return res.status(result.status).json(result)

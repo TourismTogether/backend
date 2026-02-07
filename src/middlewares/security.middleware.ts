@@ -28,7 +28,7 @@ export function setupSecurityMiddleware(app: Express) {
  * General API rate limiter
  * More lenient in development, stricter in production
  */
-const isDevelopment = process.env.NODE_ENV === "development" || process.env.NODE_ENV !== "production";
+const isDevelopment = process.env.NODE_ENV === "development";
 
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

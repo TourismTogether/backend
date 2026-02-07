@@ -16,7 +16,19 @@ class PostReplyController {
     // POST - /post-replies
     async createPostReply(req: Request, res: Response, next: NextFunction) {
         try {
-            const postReply = req.body;
+            const userId = req.userId;
+            if (!userId) {
+                return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+            }
+            const { post_id, content } = req.body;
+            if (!post_id || !content?.trim()) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "post_id and content are required",
+                    error: true,
+                });
+            }
+            const postReply = { ...req.body, user_id: userId, content: content.trim() };
             const result = await postReplyService.create(postReply);
             return res.status(result.status).json(result);
         } catch (err) {

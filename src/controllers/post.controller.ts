@@ -57,7 +57,11 @@ class PostController {
     // POST - /posts
     async createPost(req: Request, res: Response, next: NextFunction) {
         try {
-            const post = req.body;
+            const userId = req.userId;
+            if (!userId) {
+                return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+            }
+            const post = { ...req.body, user_id: userId };
             const result = await postService.createOne(post);
             return res.status(result.status).json(result);
         } catch (err) {
@@ -92,27 +96,41 @@ class PostController {
     async toggleLike(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const { user_id } = req.body;
+            const userId = req.userId || req.body?.user_id;
             if (!id) {
                 return res
                     .status(400)
-                    .json({ status: 400, message: "ID bài viết không hợp lệ" });
+                    .json({ status: 400, message: "Invalid post ID", error: true });
             }
-            const result = await postModel.toggleLike(id, user_id);
+            if (!userId) {
+                return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+            }
+            const result = await postModel.toggleLike(id, userId);
             return res.status(200).json({ status: 200, data: result });
         } catch (err) {
             next(err);
         }
     }
 
-    // POST - /post-replies
+    // POST - /posts/replies
     async createReply(req: Request, res: Response, next: NextFunction) {
         try {
-            const { post_id, user_id, content } = req.body;
+            const userId = req.userId;
+            if (!userId) {
+                return res.status(401).json({ status: 401, message: "Unauthorized", error: true });
+            }
+            const { post_id, content } = req.body;
+            if (!post_id || !content?.trim()) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "post_id and content are required",
+                    error: true,
+                });
+            }
             const result = await postReplyModel.create({
                 post_id,
-                user_id,
-                content,
+                user_id: userId,
+                content: content.trim(),
             });
             return res.status(201).json({ status: 201, data: result });
         } catch (err) {

@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import authService from "../services/auth.service";
 import { STATUS } from "../types/response";
-import { base64url } from "../utils/jwt";
-import crypto from "crypto";
+import { signJwt } from "../utils/jwt";
 import config from "../configs/config";
 import userSevice from "../services/user.service";
 import accountService from "../services/account.service";
@@ -24,30 +23,20 @@ class AuthController {
                 return res.status(result.status).json(result);
             }
 
-            const header = {
-                alg: "HS256",
-                typ: "JWT"
+            const userId = result.data?.user?.id;
+            if (!userId) {
+                return res.status(STATUS.INTERNAL_SERVER_ERROR).json({
+                    status: STATUS.INTERNAL_SERVER_ERROR,
+                    message: "Failed to create session",
+                    error: true
+                });
             }
-
-            const payload = {
-                userId: result.data?.user.id,
-                expireAt: Date.now() + (3600 * 1000) // 1h
-            }
-
-            const encodedHeader = base64url(JSON.stringify(header));
-            const encodedPayload = base64url(JSON.stringify(payload));
-
-            const tokenData = `${encodedHeader}.${encodedPayload}`;
-
-            const hmac = crypto.createHmac("sha256", config.secretKey);
-            const signature = hmac.update(tokenData).digest("base64url");
-
-            const token = `${tokenData}.${signature}`;
+            const token = signJwt(userId);
 
             res.cookie("token", token, {
                 httpOnly: true,
-                secure: config.nodeEnv == "Development" ? false : true,
-                sameSite: config.nodeEnv == "Development" ? "lax" : "none",
+                secure: config.nodeEnv !== "Development",
+                sameSite: config.nodeEnv === "Development" ? "lax" : "none",
                 maxAge: 3600 * 1000
             });
 
@@ -68,30 +57,20 @@ class AuthController {
                 return res.status(result.status).json(result);
             }
 
-            const header = {
-                alg: "HS256",
-                typ: "JWT"
+            const userId = result.data?.user?.id;
+            if (!userId) {
+                return res.status(STATUS.INTERNAL_SERVER_ERROR).json({
+                    status: STATUS.INTERNAL_SERVER_ERROR,
+                    message: "Failed to create session",
+                    error: true
+                });
             }
-
-            const payload = {
-                userId: result.data?.user.id,
-                expireAt: Date.now() + (3600 * 1000) // 1h
-            }
-
-            const encodedHeader = base64url(JSON.stringify(header));
-            const encodedPayload = base64url(JSON.stringify(payload));
-
-            const tokenData = `${encodedHeader}.${encodedPayload}`;
-
-            const hmac = crypto.createHmac("sha256", config.secretKey);
-            const signature = hmac.update(tokenData).digest("base64url");
-
-            const token = `${tokenData}.${signature}`;
+            const token = signJwt(userId);
 
             res.cookie("token", token, {
                 httpOnly: true,
-                secure: config.nodeEnv == "Development" ? false : true,
-                sameSite: config.nodeEnv == "Development" ? "lax" : "none",
+                secure: config.nodeEnv !== "Development",
+                sameSite: config.nodeEnv === "Development" ? "lax" : "none",
                 maxAge: 3600 * 1000
             });
 
@@ -106,23 +85,14 @@ class AuthController {
     // GET - /auth/user
     async getCurUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const token = req.cookies.token;
-
-            const [encodedHeader, encodedPayload, tokenSignature] = token.split(".");
-            const tokenData = `${encodedHeader}.${encodedPayload}`;
-            const hmac = crypto.createHmac("sha256", config.secretKey);
-            const signature = hmac.update(tokenData).digest("base64url");
-
-            if (signature != tokenSignature) {
+            const userId = req.userId;
+            if (!userId) {
                 return res.status(STATUS.UNAUTHORIZED).json({
                     status: STATUS.UNAUTHORIZED,
                     message: "Unauthorized"
                 });
             }
-
-
-            const payload = JSON.parse(atob(encodedPayload));
-            const { data: user }: any = await userSevice.findById(payload.userId);
+            const { data: user }: any = await userSevice.findById(userId);
 
             if (!user) {
                 return res.status(STATUS.UNAUTHORIZED).json({
@@ -159,8 +129,8 @@ class AuthController {
         try {
             res.clearCookie("token", {
                 httpOnly: true,
-                secure: config.nodeEnv == "Development" ? false : true,
-                sameSite: config.nodeEnv == "Development" ? "lax" : "none",
+                secure: config.nodeEnv !== "Development",
+                sameSite: config.nodeEnv === "Development" ? "lax" : "none",
             });
             return res.status(200).json({
                 status: STATUS.OK,
