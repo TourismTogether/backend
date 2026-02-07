@@ -13,46 +13,59 @@ const port = config.port;
 
 app.set("trust proxy", 1); // trust first proxy
 
-// CORS must be configured before other middleware
-const allowedOrigins = [
+// CORS: merge default origins with env (e.g. VERCEL: set ALLOWED_ORIGINS in dashboard)
+const defaultOrigins = [
   "http://localhost:3000",
+  "http://127.0.0.1:3000",
   "http://192.168.56.1:3000",
   "https://tourism-together.vercel.app",
-  "https://www.tourism-together.vercel.app", // Handle www variant
+  "https://www.tourism-together.vercel.app",
 ];
+const envOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
-// Track seen origins to reduce logging noise
-const seenOrigins = new Set<string>();
+// Normalize for comparison (no trailing slash, lowercase)
+function normalizeOrigin(o: string): string {
+  return o.replace(/\/$/, "").toLowerCase();
+}
+
+// Preflight: respond to OPTIONS with 204 + CORS so browser always gets valid preflight
+app.use((req: Request, res: Response, next) => {
+  const origin = req.get("Origin");
+  if (req.method === "OPTIONS" && origin) {
+    const normalized = normalizeOrigin(origin);
+    const allowed = allowedOrigins.some((a) => normalizeOrigin(a) === normalized);
+    if (allowed) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+      res.setHeader("Access-Control-Max-Age", "86400");
+      return res.status(204).end();
+    }
+  }
+  next();
+});
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
+      // Allow requests with no origin (e.g. same-origin, Postman, mobile)
       if (!origin) {
         return callback(null, true);
       }
-
-      // Normalize origin (remove trailing slash)
-      const normalizedOrigin = origin.replace(/\/$/, "");
-
-      // Check if origin matches any allowed origin
-      const isAllowed = allowedOrigins.some((allowed) => {
-        const normalizedAllowed = allowed.replace(/\/$/, "");
-        return normalizedOrigin === normalizedAllowed;
-      });
+      const normalizedOrigin = normalizeOrigin(origin);
+      const isAllowed = allowedOrigins.some((a) => normalizeOrigin(a) === normalizedOrigin);
 
       if (isAllowed) {
-        // Only log new origins once to reduce noise
-        if (!seenOrigins.has(normalizedOrigin)) {
-          console.log(`CORS: Allowed origin: ${normalizedOrigin}`);
-          seenOrigins.add(normalizedOrigin);
-        }
-        callback(null, true);
-      } else {
-        // Always log blocked origins for security monitoring
-        console.warn(`CORS: Blocked origin: ${normalizedOrigin}`);
-        callback(new Error(`Not allowed by CORS: ${normalizedOrigin}`));
+        // Return the actual origin so the header is set correctly (required for credentials)
+        return callback(null, origin);
       }
+      console.warn(`CORS: Blocked origin: ${origin}`);
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
