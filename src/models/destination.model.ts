@@ -11,6 +11,8 @@ export interface IDestination {
     category: string,
     best_season: string,
     rating: number,
+    average_rating: number,
+    total_reviews: number,
     images: Array<string>,
     created_at: Date,
     updated_at: Date
@@ -18,12 +20,32 @@ export interface IDestination {
 
 class DestinationModel {
     async findAll(): Promise<Array<IDestination>> {
-        const data = await db.query<IDestination>("SELECT * FROM destinations");
+        const data = await db.query<IDestination>(`
+                SELECT 
+                    d.id, 
+                    d.name, 
+                    d.images,
+                    d.region_id,
+                    d.country,
+                    d.description,
+                    d.latitude,
+                    d.longitude,
+                    d.category,
+                    d.best_season,
+                    d.rating,
+                    d.created_at,
+                    d.updated_at,
+                    COUNT(ad.traveller_id) AS total_reviews, 
+                    COALESCE(AVG(ad.rating_star), 0) AS average_rating
+                FROM destinations AS d
+                LEFT JOIN assess_destination AS ad ON ad.destination_id = d.id
+                GROUP BY d.id;
+            `);
         // Parse JSONB fields in response
         return data.rows.map((row: any) => ({
             ...row,
-            images: typeof row.images === 'string' 
-                ? JSON.parse(row.images) 
+            images: typeof row.images === 'string'
+                ? JSON.parse(row.images)
                 : row.images || [],
         })) as IDestination[];
     }
@@ -34,8 +56,8 @@ class DestinationModel {
             const row = data.rows[0] as any;
             return {
                 ...row,
-                images: typeof row.images === 'string' 
-                    ? JSON.parse(row.images) 
+                images: typeof row.images === 'string'
+                    ? JSON.parse(row.images)
                     : row.images || [],
             } as IDestination;
         }
@@ -68,14 +90,14 @@ class DestinationModel {
         ];
 
         const data = await db.query<IDestination>(query, values);
-        
+
         // Parse JSONB fields in response
         if (data.rows[0]) {
             const row = data.rows[0] as any;
             return {
                 ...row,
-                images: typeof row.images === 'string' 
-                    ? JSON.parse(row.images) 
+                images: typeof row.images === 'string'
+                    ? JSON.parse(row.images)
                     : row.images || [],
             } as IDestination;
         }
@@ -116,14 +138,14 @@ class DestinationModel {
         `;
 
         const data = await db.query<IDestination>(query, values);
-        
+
         // Parse JSONB fields in response
         if (data.rows[0]) {
             const row = data.rows[0] as any;
             return {
                 ...row,
-                images: typeof row.images === 'string' 
-                    ? JSON.parse(row.images) 
+                images: typeof row.images === 'string'
+                    ? JSON.parse(row.images)
                     : row.images || [],
             } as IDestination;
         }
