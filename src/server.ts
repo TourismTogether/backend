@@ -2,11 +2,13 @@ import express, { Express, Request, Response } from "express";
 import config from "./configs/config";
 import route from "./routes/index";
 import { initDB } from "./configs/db";
+import { connectRedis } from "./configs/redis";
 import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
 import { setupSecurityMiddleware, generalLimiter, readLimiter } from "./middlewares/security.middleware";
 import { requestLogger, errorLogger } from "./middlewares/logger.middleware";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { cacheMiddleware } from "./middlewares/cache.middleware";
 
 const app: Express = express();
 const port = config.port;
@@ -97,10 +99,15 @@ if (!isServerless) {
   initDB().catch((err) => {
     console.error("Failed to initialize DB:", err);
   });
+  // Initialize Redis connection
+  connectRedis().catch((err) => {
+    console.error("Failed to connect to Redis:", err);
+  });
 }
 
 // Request logging middleware
 app.use(requestLogger);
+app.use(cacheMiddleware(3600))
 
 route(app);
 
