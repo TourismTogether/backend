@@ -78,6 +78,26 @@ class UserModel {
         const data = await db.query<ITrip>(query, values);
         return data.rows;
     }
+
+    async countPostsByUser(userId: string): Promise<number> {
+        const query = `
+            SELECT COUNT(*) AS count
+            FROM posts
+            WHERE user_id = $1
+        `;
+        const data = await db.query<{ count: string }>(query, [userId]);
+        return parseInt(data.rows[0]?.count ?? "0", 10);
+    }
+
+    async countDiariesByUser(userId: string): Promise<number> {
+        const query = `
+            SELECT COUNT(*) AS count
+            FROM diaries
+            WHERE user_id = $1
+        `;
+        const data = await db.query<{ count: string }>(query, [userId]);
+        return parseInt(data.rows[0]?.count ?? "0", 10);
+    }
 }
 
 export const userModel = new UserModel();

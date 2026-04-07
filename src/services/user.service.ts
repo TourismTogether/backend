@@ -139,6 +139,70 @@ const userSevice = {
             message: "Successfully",
             data: listTrip
         }
+    },
+
+    async countPostsByUser(id: string | undefined): Promise<APIResponse<{ count: number }>> {
+        if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "User ID is required and must be a valid UUID",
+                error: true
+            };
+        }
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(id)) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "Invalid User ID format. Expected UUID.",
+                error: true
+            };
+        }
+        try {
+            const count = await userModel.countPostsByUser(id);
+            return {
+                status: STATUS.OK,
+                message: "Successfully",
+                data: { count }
+            };
+        } catch (error) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to count posts",
+                error: true
+            };
+        }
+    },
+
+    async countDiariesByUser(id: string | undefined): Promise<APIResponse<{ count: number }>> {
+        if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "User ID is required and must be a valid UUID",
+                error: true
+            };
+        }
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(id)) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "Invalid User ID format. Expected UUID.",
+                error: true
+            };
+        }
+        try {
+            const count = await userModel.countDiariesByUser(id);
+            return {
+                status: STATUS.OK,
+                message: "Successfully",
+                data: { count }
+            };
+        } catch (error) {
+            return {
+                status: STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to count diaries",
+                error: true
+            };
+        }
     }
 }
 

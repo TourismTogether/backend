@@ -68,6 +68,60 @@ class UserController {
         }
     }
 
+    // GET - /users/:id/posts/count
+    async countPostsByUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+                return res.status(400).json({
+                    status: 400,
+                    message: "User ID is required and must be a valid UUID",
+                    error: true,
+                });
+            }
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Invalid User ID format. Expected UUID.",
+                    error: true,
+                });
+            }
+            const result = await userSevice.countPostsByUser(id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            console.error("Error in countPostsByUser:", err);
+            next(err);
+        }
+    }
+
+    // GET - /users/:id/diaries/count
+    async countDiariesByUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            if (!id || id === "NaN" || id === "undefined" || id.trim() === "") {
+                return res.status(400).json({
+                    status: 400,
+                    message: "User ID is required and must be a valid UUID",
+                    error: true,
+                });
+            }
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return res.status(400).json({
+                    status: 400,
+                    message: "Invalid User ID format. Expected UUID.",
+                    error: true,
+                });
+            }
+            const result = await userSevice.countDiariesByUser(id);
+            return res.status(result.status).json(result);
+        } catch (err) {
+            console.error("Error in countDiariesByUser:", err);
+            next(err);
+        }
+    }
+
     // POST - /users
     async createUser(req: Request, res: Response, next: NextFunction) {
         try {
