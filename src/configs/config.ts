@@ -14,9 +14,11 @@ interface Config {
     nodeEnv: string
 }
 
-const nodeEnv = process.env.NODE_ENV || "production";
+const rawNodeEnv = process.env.NODE_ENV || "production";
+const normalizedNodeEnv = rawNodeEnv.trim().replace(/^["']|["']$/g, "").toLowerCase();
+const isProduction = normalizedNodeEnv === "production";
 const rawSecret = process.env.SECRET_KEY || "";
-if (nodeEnv === "production" && (!rawSecret || rawSecret.length < 32)) {
+if (isProduction && (!rawSecret || rawSecret.length < 32)) {
     throw new Error(
         "SECRET_KEY must be set and at least 32 characters in production. " +
         "On Vercel: Project → Settings → Environment Variables → add SECRET_KEY with a long random string (e.g. 32+ chars)."
@@ -32,9 +34,9 @@ const config: Config = {
     databaseUser: process.env.DATABASE_USER || "",
     databasePassword: process.env.DATABASE_PASSWORD || "",
     databaseName: process.env.DATABASE_NAME || "postgre",
-    databaseSSL: process.env.DATABASE_SSL === "true" || process.env.NODE_ENV === "production",
+    databaseSSL: process.env.DATABASE_SSL === "true" || isProduction,
     openAiApiKey: process.env.OPENROUTER_API_KEY || "",
-    nodeEnv: nodeEnv === "development" ? "Development" : "Production"
+    nodeEnv: normalizedNodeEnv === "development" ? "Development" : "Production"
 }
 
 export default config;
