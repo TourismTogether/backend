@@ -49,14 +49,27 @@ export function errorLogger(
   res: Response,
   next: NextFunction
 ) {
-  console.error(
-    `[${new Date().toISOString()}] ERROR: ${err.message}`,
-    {
-      url: req.originalUrl,
-      method: req.method,
-      ip: req.ip,
-      stack: err.stack,
-    }
-  );
+  const statusCode = (err as any)?.statusCode;
+  const isClientError = Number.isFinite(statusCode) && statusCode >= 400 && statusCode < 500;
+  const isValidationError = (err as any)?.code === "VALIDATION_ERROR" || err.message.startsWith("Validation failed:");
+
+  const logPayload = {
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+    ...(isClientError || isValidationError ? {} : { stack: err.stack }),
+  };
+
+  if (isClientError || isValidationError) {
+    console.warn(
+      `[${new Date().toISOString()}] WARN: ${err.message}`,
+      logPayload
+    );
+  } else {
+    console.error(
+      `[${new Date().toISOString()}] ERROR: ${err.message}`,
+      logPayload
+    );
+  }
   next(err);
 }

@@ -67,7 +67,14 @@ export function errorHandler(
 
   // Log operational errors at warn level, programming errors at error level
   if (err instanceof AppError && err.isOperational) {
-    console.warn("Operational Error:", errorContext);
+    const isClientError = err.statusCode >= 400 && err.statusCode < 500;
+    // Reduce noise for expected client-side errors (validation, bad input, etc.).
+    if (isClientError) {
+      const { stack, ...safeContext } = errorContext;
+      console.warn("Operational Error:", safeContext);
+    } else {
+      console.warn("Operational Error:", errorContext);
+    }
   } else {
     console.error("Programming Error:", errorContext);
   }
@@ -79,6 +86,7 @@ export function errorHandler(
       message: err.message,
       error: true,
       code: err.code,
+      ...(err.code === "VALIDATION_ERROR" && { details: (err as any).details }),
       ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
     } as APIResponse<null>);
   }

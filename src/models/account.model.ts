@@ -34,6 +34,15 @@ class AccountModel {
         return data.rows[0];
     }
 
+    async findByUsername(username: string): Promise<IAccount | undefined> {
+        const query = `
+            SELECT * FROM accounts WHERE username = $1
+        `
+        const values = [username];
+        const data = await db.query<IAccount>(query, values);
+        return data.rows[0];
+    }
+
     async createOne(account: IAccount): Promise<IAccount | undefined> {
         const query = `
             INSERT INTO accounts (username, password, email)

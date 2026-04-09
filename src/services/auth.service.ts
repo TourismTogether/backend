@@ -12,7 +12,8 @@ const authService = {
         if (isExistEmail) {
             return {
                 status: STATUS.CONFLICT,
-                message: "Email already exists"
+                message: "Email already exists",
+                error: true
             }
         }
         if (user.phone) {
@@ -20,14 +21,15 @@ const authService = {
             if (isExistPhone) {
                 return {
                     status: STATUS.CONFLICT,
-                    message: "Phone already exists"
+                    message: "Phone already exists",
+                    error: true
                 }
             }
         }
         if (!account.password) {
             return {
                 status: STATUS.BAD_REQUEST,
-                message: "password is empty",
+                message: "Password is required",
                 error: true
             }
         }
@@ -80,46 +82,54 @@ const authService = {
     },
 
     async signIn(account: IAccount): Promise<APIResponse<{ account: IAccount, user: IUser }>> {
-        const emailAccount = await accountModel.findByEmail(account.email);
-        if (!emailAccount || !emailAccount.id || !emailAccount.password) {
-            return {
-                status: STATUS.NOT_FOUND,
-                message: "Email or password is incorrect",
-                error: true
-            }
-        }
-
         if (!account.password) {
             return {
                 status: STATUS.BAD_REQUEST,
-                message: "password is empty",
+                message: "Password is required",
                 error: true
             }
         }
 
-        if (!bcrypt.compareSync(account.password, emailAccount.password)) {
+        let foundAccount: IAccount | undefined;
+
+        if (account.email) {
+            foundAccount = await accountModel.findByEmail(account.email);
+        } else if (account.username) {
+            foundAccount = await accountModel.findByUsername(account.username);
+        }
+
+        if (!foundAccount || !foundAccount.id || !foundAccount.password) {
             return {
-                status: STATUS.NOT_FOUND,
-                message: "Email or password is incorrect",
+                status: STATUS.UNAUTHORIZED,
+                message: "Invalid email/username or password",
                 error: true
             }
         }
 
-        const user = await userModel.findByAccountId(emailAccount.id);
+        if (!bcrypt.compareSync(account.password, foundAccount.password)) {
+            return {
+                status: STATUS.UNAUTHORIZED,
+                message: "Invalid email/username or password",
+                error: true
+            }
+        }
+
+        const user = await userModel.findByAccountId(foundAccount.id);
         if (!user) {
             return {
                 status: STATUS.NOT_FOUND,
-                message: "User is not found"
+                message: "User profile not found",
+                error: true
             }
         }
 
-        delete emailAccount.password;
+        delete foundAccount.password;
 
         return {
             status: STATUS.OK,
             message: "Successfully",
             data: {
-                account: emailAccount,
+                account: foundAccount,
                 user
             }
         }
