@@ -4,6 +4,11 @@ import config from "./config";
 // Configure pool for serverless environments
 // In serverless, we need smaller pools and shorter timeouts
 const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+const isProduction = (process.env.NODE_ENV || "").toLowerCase() === "production";
+const envPoolMax = Number(process.env.DB_POOL_MAX);
+const poolMax = Number.isFinite(envPoolMax) && envPoolMax > 0
+  ? Math.floor(envPoolMax)
+  : 1;
 
 export const db = new Pool({
   host: config.databaseHost,
@@ -17,13 +22,19 @@ export const db = new Pool({
       }
     : false,
   // Connection pool settings
-  // Reduced pool size to avoid Supabase connection limits
-  max: isServerless ? 1 : 5, // Smaller pool to avoid max clients error
+  // Keep pool very small in production/session pooler mode to avoid
+  // "MaxClientsInSessionMode: max clients reached" errors.
+  // Override with DB_POOL_MAX when needed.
+  max: poolMax,
   min: 0, // Don't maintain minimum connections
   idleTimeoutMillis: 10000, // Close idle connections after 10 seconds (faster cleanup)
   connectionTimeoutMillis: 5000, // Timeout after 5 seconds
   allowExitOnIdle: true, // Allow process to exit when pool is idle
 });
+
+console.info(
+  `DB pool config: max=${poolMax}, serverless=${Boolean(isServerless)}, production=${isProduction}`
+);
 
 // Handle pool errors without crashing
 db.on("error", (err) => {
@@ -43,21 +54,25 @@ async function retryQuery<T extends QueryResultRow = any>(
       return await queryFn();
     } catch (error: any) {
       lastError = error;
+      const isMaxClientsError =
+        error?.code === "XX000" ||
+        error?.message?.includes("max clients") ||
+        error?.message?.includes("MaxClientsInSessionMode");
 
       // Check if it's a connection error that we should retry
       const isConnectionError =
         error?.code === "08006" || // Connection failure
-        error?.code === "XX000" || // MaxClientsInSessionMode
-        error?.message?.includes("max clients") ||
-        error?.message?.includes("MaxClientsInSessionMode") ||
+        isMaxClientsError ||
         error?.message?.includes("connection");
 
+      // Do not retry max-clients errors because retries create extra pressure
+      // and increase request latency while the pooler is saturated.
+      if (isMaxClientsError) {
+        throw error;
+      }
+
       if (isConnectionError && attempt < maxRetries - 1) {
-        // Longer delay for max clients error to allow pool to free up
-        const baseDelay = error?.message?.includes("max clients") || error?.code === "XX000" 
-          ? 2000 
-          : initialDelay;
-        const delay = baseDelay * Math.pow(2, attempt);
+        const delay = initialDelay * Math.pow(2, attempt);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }

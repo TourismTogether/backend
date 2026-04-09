@@ -121,6 +121,20 @@ export function errorHandler(
           error: true,
           code: "DATABASE_ERROR",
         } as APIResponse<null>);
+
+      case "XX000": // Internal error from pooler/DB proxy (e.g., max clients)
+        if (
+          dbError?.message?.includes("MaxClientsInSessionMode") ||
+          dbError?.message?.includes("max clients")
+        ) {
+          return res.status(STATUS.SERVICE_UNAVAILABLE).json({
+            status: STATUS.SERVICE_UNAVAILABLE,
+            message: "Database is temporarily busy. Please try again.",
+            error: true,
+            code: "DB_MAX_CLIENTS_REACHED",
+          } as APIResponse<null>);
+        }
+        break;
     }
   }
 
