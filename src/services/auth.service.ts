@@ -92,10 +92,20 @@ const authService = {
 
         let foundAccount: IAccount | undefined;
 
-        if (account.email) {
-            foundAccount = await accountModel.findByEmail(account.email);
-        } else if (account.username) {
-            foundAccount = await accountModel.findByUsername(account.username);
+        const rawLogin = (account.email ?? account.username ?? "").trim();
+        if (!rawLogin) {
+            return {
+                status: STATUS.BAD_REQUEST,
+                message: "Email or username is required",
+                error: true
+            };
+        }
+
+        // Login form sends a single field as `email`; treat values without "@" as username.
+        if (rawLogin.includes("@")) {
+            foundAccount = await accountModel.findByEmail(rawLogin.toLowerCase());
+        } else {
+            foundAccount = await accountModel.findByUsername(rawLogin);
         }
 
         if (!foundAccount || !foundAccount.id || !foundAccount.password) {

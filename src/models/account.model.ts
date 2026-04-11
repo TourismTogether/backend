@@ -27,7 +27,7 @@ class AccountModel {
 
     async findByEmail(email: string): Promise<IAccount | undefined> {
         const query = `
-            SELECT * FROM accounts WHERE email = $1
+            SELECT * FROM accounts WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
         `
         const values = [email];
         const data = await db.query<IAccount>(query, values);
@@ -36,7 +36,7 @@ class AccountModel {
 
     async findByUsername(username: string): Promise<IAccount | undefined> {
         const query = `
-            SELECT * FROM accounts WHERE username = $1
+            SELECT * FROM accounts WHERE TRIM(username) = TRIM($1)
         `
         const values = [username];
         const data = await db.query<IAccount>(query, values);
