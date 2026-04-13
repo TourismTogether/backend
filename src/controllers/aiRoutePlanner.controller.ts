@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import aiRoutePlannerService from "../services/aiRoutePlanner.service";
-import OpenAI from "openai";
-import config from "../configs/config";
 
 class AIRoutePlannerController {
   async generateItinerary(
