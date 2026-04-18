@@ -12,6 +12,8 @@ const app: Express = express();
 const port = config.port;
 
 app.set("trust proxy", 1); // trust first proxy
+/** User-specific JSON must not 304 with a stale body (same ETag as a prior response). */
+app.set("etag", false);
 
 // CORS: merge default origins with env (e.g. VERCEL: set ALLOWED_ORIGINS in dashboard)
 const defaultOrigins = [
