@@ -82,14 +82,19 @@ class AuthController {
         }
     }
 
-    // GET - /auth/user
+    // GET - /auth/user (optional auth: no cookie → 200 + isAuthenticated false, avoids noisy 401 on public pages)
     async getCurUser(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = req.userId;
             if (!userId) {
-                return res.status(STATUS.UNAUTHORIZED).json({
-                    status: STATUS.UNAUTHORIZED,
-                    message: "Unauthorized"
+                return res.status(STATUS.OK).json({
+                    status: STATUS.OK,
+                    message: "Not authenticated",
+                    data: {
+                        isAuthenticated: false,
+                        user: null,
+                        account: null
+                    }
                 });
             }
             const { data: user }: any = await userSevice.findById(userId);

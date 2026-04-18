@@ -63,3 +63,18 @@ export function optionalAuth(
     next();
   }
 }
+
+/**
+ * Avoid 304 + stale JSON for GET /auth/user (browser could reuse a cached guest session after sign-in).
+ */
+export function noCacheAuthUser(req: Request, res: Response, next: NextFunction) {
+  delete req.headers["if-none-match"];
+  delete req.headers["if-modified-since"];
+  res.setHeader(
+    "Cache-Control",
+    "private, no-store, no-cache, must-revalidate"
+  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+}
