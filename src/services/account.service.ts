@@ -20,6 +20,39 @@ const accountService = {
         };
     },
 
+    async findAllPaginated(page: number, pageSize: number): Promise<APIResponse<{
+        items: IAccount[];
+        pagination: {
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+    }>> {
+        const safePage = Math.max(1, Number(page) || 1);
+        const safePageSize = Math.min(100, Math.max(1, Number(pageSize) || 10));
+        const offset = (safePage - 1) * safePageSize;
+
+        const [items, total] = await Promise.all([
+            accountModel.findPaginated(safePageSize, offset),
+            accountModel.countAll(),
+        ]);
+
+        return {
+            status: STATUS.OK,
+            message: "Successfully",
+            data: {
+                items,
+                pagination: {
+                    page: safePage,
+                    pageSize: safePageSize,
+                    total,
+                    totalPages: Math.max(1, Math.ceil(total / safePageSize)),
+                }
+            }
+        };
+    },
+
     async findById(id: string): Promise<APIResponse<IAccount>> {
         const account = await accountModel.findById(id);
         if (!account) {
