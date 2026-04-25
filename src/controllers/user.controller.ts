@@ -6,6 +6,13 @@ class UserController {
     // GET - /users
     async getAllUsers(req: Request, res: Response, next: NextFunction) {
         try {
+            const hasPagination = req.query.page !== undefined || req.query.pageSize !== undefined;
+            if (hasPagination) {
+                const page = Number(req.query.page ?? 1);
+                const pageSize = Number(req.query.pageSize ?? 10);
+                const users = await userSevice.findAllPaginated(page, pageSize);
+                return res.status(users.status).json(users);
+            }
             const users = await userSevice.findAll();
             return res.json(users);
         } catch (err) {

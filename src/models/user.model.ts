@@ -17,6 +17,19 @@ class UserModel {
         return data.rows;
     }
 
+    async findPaginated(limit: number, offset: number): Promise<Array<IUser>> {
+        const data = await db.query<IUser>(
+            "SELECT * FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            [limit, offset]
+        );
+        return data.rows;
+    }
+
+    async countAll(): Promise<number> {
+        const data = await db.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM users");
+        return Number(data.rows[0]?.count || 0);
+    }
+
     async findById(id: string): Promise<IUser | undefined> {
         const data = await db.query<IUser>("SELECT * FROM users WHERE id = $1", [id]);
         return data.rows[0];
