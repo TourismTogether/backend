@@ -28,6 +28,22 @@ class DestinationModel {
         })) as IDestination[];
     }
 
+    async findPaginated(limit: number, offset: number): Promise<Array<IDestination>> {
+        const data = await db.query<IDestination>(
+            "SELECT * FROM destinations ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            [limit, offset]
+        );
+        return data.rows.map((row: any) => ({
+            ...row,
+            images: typeof row.images === "string" ? JSON.parse(row.images) : row.images || [],
+        })) as IDestination[];
+    }
+
+    async countAll(): Promise<number> {
+        const data = await db.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM destinations");
+        return Number(data.rows[0]?.count || 0);
+    }
+
     async findById(id: string): Promise<IDestination | undefined> {
         const data = await db.query<IDestination>("SELECT * FROM destinations WHERE id = $1", [id]);
         if (data.rows[0]) {

@@ -12,6 +12,19 @@ class SupporterModel {
         return result.rows;
     }
 
+    async findPaginated(limit: number, offset: number): Promise<Array<ISupporter>> {
+        const result = await db.query<ISupporter>(
+            `SELECT * FROM supporters ORDER BY user_id ASC LIMIT $1 OFFSET $2`,
+            [limit, offset]
+        );
+        return result.rows;
+    }
+
+    async countAll(): Promise<number> {
+        const result = await db.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM supporters");
+        return Number(result.rows[0]?.count || 0);
+    }
+
     async findById(userId: string): Promise<ISupporter | undefined> {
         const result = await db.query(
             `SELECT * FROM supporters WHERE user_id = $1`,

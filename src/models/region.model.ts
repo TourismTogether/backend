@@ -14,6 +14,19 @@ class RegionModel {
         return data.rows;
     }
 
+    async findPaginated(limit: number, offset: number): Promise<Array<IRegion>> {
+        const data = await db.query<IRegion>(
+            "SELECT * FROM regions ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+            [limit, offset]
+        );
+        return data.rows;
+    }
+
+    async countAll(): Promise<number> {
+        const data = await db.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM regions");
+        return Number(data.rows[0]?.count || 0);
+    }
+
     async findById(id: string): Promise<IRegion | undefined> {
         const data = await db.query<IRegion>("SELECT * FROM regions WHERE id = $1", [id]);
         return data.rows[0];

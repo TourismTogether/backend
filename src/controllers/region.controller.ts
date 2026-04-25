@@ -5,6 +5,13 @@ class RegionController {
     // GET - /regions
     async getAllRegion(req: Request, res: Response, next: NextFunction) {
         try {
+            const hasPagination = req.query.page !== undefined || req.query.pageSize !== undefined;
+            if (hasPagination) {
+                const page = Number(req.query.page ?? 1);
+                const pageSize = Number(req.query.pageSize ?? 10);
+                const result = await regionService.findAllPaginated(page, pageSize);
+                return res.status(result.status).json(result);
+            }
             const result = await regionService.findAll();
             return res.status(result.status).json(result);
         } catch (err) {

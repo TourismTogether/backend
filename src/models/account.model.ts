@@ -16,6 +16,22 @@ class AccountModel {
         return data.rows;
     }
 
+    async findPaginated(limit: number, offset: number): Promise<Array<IAccount>> {
+        const query = `
+            SELECT * FROM accounts
+            ORDER BY id DESC
+            LIMIT $1 OFFSET $2
+        `;
+        const data = await db.query<IAccount>(query, [limit, offset]);
+        return data.rows;
+    }
+
+    async countAll(): Promise<number> {
+        const query = `SELECT COUNT(*)::text AS count FROM accounts`;
+        const data = await db.query<{ count: string }>(query);
+        return Number(data.rows[0]?.count || 0);
+    }
+
     async findById(id: string): Promise<IAccount | undefined> {
         const query = `
             SELECT * FROM accounts WHERE id = $1
